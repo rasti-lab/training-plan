@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Rasti Runs"/>
+<meta name="theme-color" content="#0a0a0c"/>
+<link rel="manifest" href="/manifest.json"/>
+<title>Rasti Runs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #0a0a0c;
+  --bg2: #111114;
+  --bg3: #18181c;
+  --bg4: #222228;
+  --border: rgba(255,255,255,.06);
+  --border2: rgba(255,255,255,.1);
+  --text: #f4f4f5;
+  --text2: #a1a1aa;
+  --text3: #52525b;
+  --accent: #f97316;
+  --accent2: #fb923c;
+  --green: #22c55e;
+  --blue: #3b82f6;
+  --purple: #a855f7;
+  --teal: #14b8a6;
+  --red: #ef4444;
+  --phase-c2k: #3b82f6;
+  --phase-base: #a855f7;
+  --phase-build: #ec4899;
+  --phase-taper: #14b8a6;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; background: var(--bg); }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  padding-bottom: calc(72px + var(--safe-bottom));
+}
+button { font-family: inherit; cursor: pointer; border: none; background: none; }
+a { color: inherit; text-decoration: none; }
+::-webkit-scrollbar { width: 0; }
+
+/* ── NOISE TEXTURE ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── NAV ── */
+.nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: calc(68px + var(--safe-bottom));
+  padding-bottom: var(--safe-bottom);
+  background: rgba(10,10,12,.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-around;
+  padding-top: 10px;
+  z-index: 100;
+}
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 16px;
+  border-radius: 12px;
+  transition: all .15s;
+  color: var(--text3);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+}
+.nav-item.active { color: var(--accent); }
+.nav-item svg { width: 22px; height: 22px; }
+
+/* ── SCREENS ── */
+.screen { display: none; padding: calc(var(--safe-top) + 1rem) 1rem 1rem; position: relative; z-index: 1; }
+.screen.active { display: block; }
+
+/* ── HOME SCREEN ── */
+.home-hero {
+  margin-bottom: 1.5rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #1a0a00 0%, #0a0a0c 60%);
+  border-radius: 20px;
+  border: 1px solid rgba(249,115,22,.15);
+  position: relative;
+  overflow: hidden;
+}
+.home-hero::after {
+  content: '';
+  position: absolute;
+  top: -40px; right: -40px;
+  width: 160px; height: 160px;
+  background: radial-gradient(circle, rgba(249,115,22,.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+.home-greeting {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.8rem;
+  letter-spacing: .04em;
+  line-height: 1;
+  margin-bottom: .4rem;
+}
+.home-greeting span { color: var(--accent); }
+.home-meta { font-size: .8rem; color: var(--text2); font-family: 'JetBrains Mono', monospace; }
+.race-countdown {
+  display: flex;
+  gap: .75rem;
+  margin-top: 1.25rem;
+}
+.countdown-unit {
+  flex: 1;
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: .65rem .5rem;
+  text-align: center;
+}
+.countdown-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.8rem;
+  color: var(--accent);
+  line-height: 1;
+}
+.countdown-label { font-size: .6rem; color: var(--text3); text-transform: uppercase; letter-spacing: .08em; margin-top: 2px; }
+
+/* ── TODAY CARD ── */
+.today-card {
+  margin-bottom: 1rem;
+  padding: 1.25rem;
+  background: var(--bg2);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+}
+.today-label {
+  font-size: .65rem;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--text3);
+  margin-bottom: .6rem;
+}
+.session-row {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .7rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.session-row:last-child { border-bottom: none; }
+.session-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.session-dot.run { background: var(--accent); }
+.session-dot.strength { background: var(--purple); }
+.session-dot.recovery { background: var(--teal); }
+.session-dot.rest { background: var(--bg4); }
+.session-info { flex: 1; }
+.session-name { font-size: .9rem; font-weight: 500; }
+.session-meta { font-size: .75rem; color: var(--text2); margin-top: 1px; }
+.session-chip {
+  font-size: .65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  padding: .2rem .5rem;
+  border-radius: 6px;
+}
+.chip-run { background: rgba(249,115,22,.12); color: var(--accent); }
+.chip-strength { background: rgba(168,85,247,.12); color: var(--purple); }
+.chip-mobility { background: rgba(20,184,166,.12); color: var(--teal); }
+.chip-rest { background: var(--bg4); color: var(--text3); }
+
+/* ── WEEK PROGRESS ── */
+.week-progress {
+  margin-bottom: 1rem;
+  padding: 1.25rem;
+  background: var(--bg2);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+}
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: .75rem;
+}
+.progress-title { font-weight: 600; font-size: .95rem; }
+.progress-pct { font-family: 'JetBrains Mono', monospace; font-size: .8rem; color: var(--accent); }
+.progress-bar {
+  height: 6px;
+  background: var(--bg4);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: .75rem;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  border-radius: 3px;
+  transition: width .8s ease;
+}
+.stats-row { display: flex; gap: .75rem; }
+.stat-box {
+  flex: 1;
+  background: var(--bg3);
+  border-radius: 10px;
+  padding: .65rem;
+  text-align: center;
+}
+.stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; color: var(--text); line-height: 1; }
+.stat-lbl { font-size: .6rem; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; margin-top: 2px; }
+
+/* ── STRAVA CARD ── */
+.strava-card {
+  margin-bottom: 1rem;
+  padding: 1.25rem;
+  background: var(--bg2);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+}
+.strava-header { display: flex; align-items: center; gap: .75rem; margin-bottom: 1rem; }
+.strava-logo {
+  width: 32px; height: 32px;
+  background: #fc4c02;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: .85rem;
+  color: white;
+  letter-spacing: .05em;
+}
+.strava-title { font-weight: 600; font-size: .95rem; }
+.strava-sub { font-size: .75rem; color: var(--text2); }
+.btn-strava {
+  width: 100%;
+  padding: .85rem;
+  background: #fc4c02;
+  color: white;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: .9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  transition: opacity .15s;
+}
+.btn-strava:hover { opacity: .9; }
+.btn-strava.connected { background: rgba(34,197,94,.12); color: var(--green); border: 1px solid rgba(34,197,94,.3); }
+.recent-run {
+  padding: .75rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.recent-run:last-child { border-bottom: none; }
+.run-name { font-size: .9rem; font-weight: 500; }
+.run-stats { display: flex; gap: 1rem; margin-top: .3rem; }
+.run-stat { font-size: .75rem; color: var(--text2); font-family: 'JetBrains Mono', monospace; }
+
+/* ── PLAN SCREEN ── */
+.phase-pills {
+  display: flex;
+  gap: .5rem;
+  overflow-x: auto;
+  padding-bottom: .5rem;
+  margin-bottom: 1rem;
+  scrollbar-width: none;
+}
+.phase-pill {
+  flex-shrink: 0;
+  padding: .4rem .85rem;
+  border-radius: 20px;
+  font-size: .75rem;
+  font-weight: 600;
+  border: 1px solid var(--border2);
+  color: var(--text2);
+  background: transparent;
+  transition: all .15s;
+}
+.phase-pill.active { color: #fff; border-color: transparent; }
+.phase-pill.c2k.active { background: var(--phase-c2k); }
+.phase-pill.base.active { background: var(--phase-base); }
+.phase-pill.build.active { background: var(--phase-build); }
+.phase-pill.taper.active { background: var(--phase-taper); }
+.phase-pill.all.active { background: var(--accent); }
+
+.week-card {
+  margin-bottom: .75rem;
+  background: var(--bg2);
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.week-card.current-week { border-color: rgba(249,115,22,.3); }
+.week-header {
+  display: flex;
+  align-items: center;
+  padding: .85rem 1rem;
+  background: var(--bg3);
+  gap: .75rem;
+  cursor: pointer;
+}
+.week-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .7rem;
+  color: var(--text3);
+  min-width: 28px;
+}
+.week-phase-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.week-title { flex: 1; font-size: .88rem; font-weight: 500; }
+.week-dates { font-size: .7rem; color: var(--text3); font-family: 'JetBrains Mono', monospace; }
+.week-arrow { font-size: .7rem; color: var(--text3); transition: transform .2s; }
+.week-arrow.open { transform: rotate(180deg); }
+.week-body { display: none; padding: .5rem; }
+.week-body.open { display: block; }
+
+.day-row {
+  display: flex;
+  gap: .6rem;
+  padding: .5rem .5rem;
+  border-radius: 8px;
+  margin-bottom: 2px;
+}
+.day-row:hover { background: var(--bg3); }
+.day-name {
+  font-size: .7rem;
+  font-weight: 600;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  min-width: 32px;
+  padding-top: 2px;
+}
+.day-name.today { color: var(--accent); }
+.day-sessions { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+.session-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  font-size: .82rem;
+  color: var(--text);
+}
+.tag-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+.session-detail { font-size: .7rem; color: var(--text3); margin-top: 1px; }
+.done-check {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  border: 1px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: .65rem;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: all .15s;
+  margin-top: 2px;
+}
+.done-check.done { background: var(--green); border-color: var(--green); color: #000; }
+
+/* ── SESSION DETAIL MODAL ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+  opacity: 0;
+  visibility: hidden;
+  transition: all .25s;
+}
+.modal-overlay.open { opacity: 1; visibility: visible; }
+.modal-sheet {
+  width: 100%;
+  max-height: 80vh;
+  background: var(--bg2);
+  border-radius: 20px 20px 0 0;
+  padding: 1.25rem;
+  padding-bottom: calc(1.25rem + var(--safe-bottom));
+  overflow-y: auto;
+  transform: translateY(100%);
+  transition: transform .3s cubic-bezier(.32,.72,0,1);
+}
+.modal-overlay.open .modal-sheet { transform: translateY(0); }
+.modal-handle {
+  width: 36px; height: 4px;
+  background: var(--bg4);
+  border-radius: 2px;
+  margin: 0 auto 1.25rem;
+}
+.modal-sport {
+  font-size: .65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  margin-bottom: .4rem;
+}
+.modal-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.8rem;
+  letter-spacing: .04em;
+  line-height: 1.1;
+  margin-bottom: .3rem;
+}
+.modal-date { font-size: .75rem; color: var(--text2); font-family: 'JetBrains Mono', monospace; margin-bottom: 1rem; }
+.modal-chips { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.modal-chip {
+  padding: .3rem .75rem;
+  border-radius: 20px;
+  font-size: .75rem;
+  font-weight: 600;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+}
+.modal-desc {
+  font-size: .88rem;
+  color: var(--text2);
+  line-height: 1.6;
+  margin-bottom: 1rem;
+  padding: .9rem;
+  background: var(--bg3);
+  border-radius: 10px;
+}
+.btn-done {
+  width: 100%;
+  padding: .9rem;
+  background: var(--accent);
+  color: #000;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: .95rem;
+  margin-top: .5rem;
+  transition: opacity .15s;
+}
+.btn-done:hover { opacity: .9; }
+.btn-done.marked { background: rgba(34,197,94,.15); color: var(--green); border: 1px solid rgba(34,197,94,.3); }
+
+/* ── STATS SCREEN ── */
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; margin-bottom: 1rem; }
+.big-stat {
+  background: var(--bg2);
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  padding: 1.1rem;
+}
+.big-stat-val {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.4rem;
+  line-height: 1;
+  color: var(--text);
+}
+.big-stat-unit { font-size: .7rem; color: var(--text3); margin-left: 2px; }
+.big-stat-lbl { font-size: .7rem; color: var(--text2); margin-top: .3rem; }
+.big-stat.accent .big-stat-val { color: var(--accent); }
+
+.checkin-card {
+  padding: 1.25rem;
+  background: var(--bg2);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  margin-bottom: 1rem;
+}
+.checkin-title { font-weight: 600; font-size: 1rem; margin-bottom: 1rem; }
+.checkin-field { margin-bottom: .85rem; }
+.field-label { font-size: .75rem; color: var(--text2); margin-bottom: .4rem; text-transform: uppercase; letter-spacing: .06em; }
+.field-input {
+  width: 100%;
+  padding: .75rem;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: .9rem;
+  outline: none;
+  transition: border-color .15s;
+}
+.field-input:focus { border-color: var(--accent); }
+.rpe-row { display: flex; gap: .4rem; }
+.rpe-btn {
+  flex: 1;
+  padding: .55rem 0;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text2);
+  font-size: .8rem;
+  font-weight: 600;
+  transition: all .15s;
+}
+.rpe-btn.selected { background: var(--accent); color: #000; border-color: var(--accent); }
+.btn-submit {
+  width: 100%;
+  padding: .9rem;
+  background: var(--accent);
+  color: #000;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: .95rem;
+  transition: opacity .15s;
+}
+.btn-submit:hover { opacity: .9; }
+.knee-alert {
+  display: flex; gap: .6rem; align-items: flex-start;
+  padding: .9rem 1rem;
+  background: rgba(239,68,68,.08);
+  border: 1px solid rgba(239,68,68,.2);
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  font-size: .82rem;
+  color: #fca5a5;
+  line-height: 1.5;
+}
+
+/* ── SCREEN TITLE ── */
+.screen-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2rem;
+  letter-spacing: .06em;
+  margin-bottom: 1rem;
+  padding-top: calc(var(--safe-top) + .5rem);
+}
+
+/* ── CHECKIN HISTORY ── */
+.checkin-item {
+  padding: .85rem 1rem;
+  background: var(--bg2);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  margin-bottom: .5rem;
+}
+.checkin-date { font-size: .7rem; color: var(--text3); font-family: 'JetBrains Mono', monospace; margin-bottom: .3rem; }
+.checkin-summary { font-size: .85rem; color: var(--text2); }
+
+/* ── LOADING ── */
+.loading {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 100vh;
+  gap: 1rem;
+}
+.loading-logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 3rem;
+  color: var(--accent);
+  letter-spacing: .1em;
+}
+.loading-bar {
+  width: 120px; height: 3px;
+  background: var(--bg3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.loading-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  animation: loadAnim 1.2s ease forwards;
+}
+@keyframes loadAnim { from { width: 0 } to { width: 100% } }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-up { animation: fadeUp .35s ease forwards; }
+.fade-up-2 { animation: fadeUp .35s .08s ease both; }
+.fade-up-3 { animation: fadeUp .35s .16s ease both; }
+.fade-up-4 { animation: fadeUp .35s .24s ease both; }
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="loading" id="loadingScreen">
+  <div class="loading-logo">RASTI RUNS</div>
+  <div class="loading-bar"><div class="loading-fill"></div></div>
+</div>
+
+<!-- APP (hidden until loaded) -->
+<div id="app" style="display:none">
+
+<!-- SCREENS -->
+<div class="screen active" id="screen-home"></div>
+<div class="screen" id="screen-plan"></div>
+<div class="screen" id="screen-stats"></div>
+
+<!-- NAV -->
+<nav class="nav">
+  <button class="nav-item active" onclick="showScreen('home')" id="nav-home">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+    </svg>
+    Home
+  </button>
+  <button class="nav-item" onclick="showScreen('plan')" id="nav-plan">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+    </svg>
+    Plan
+  </button>
+  <button class="nav-item" onclick="showScreen('stats')" id="nav-stats">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+    </svg>
+    Stats
+  </button>
+</nav>
+
+</div>
+
+<!-- SESSION MODAL -->
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<script>
+// ── PLAN DATA ──────────────────────────────────────────────────────────────
+const PLAN = [{"wn":0,"phase":"Pre-Plan","focus":"Week before plan starts \u2014 actual activity log","start":"2026-05-18","end":"2026-05-24","recovery":false,"days":[{"date":"2026-05-18","dow":"Monday","sessions":[]},{"date":"2026-05-19","dow":"Tuesday","sessions":[]},{"date":"2026-05-20","dow":"Wednesday","sessions":[{"id":"w0-wed-run","sport":"run","type":"logged","name":"Easy Run \u2014 3.30km \u26a0\ufe0f Zone 4","dist":3.3,"dur":23,"hr":"159 bpm (actual)","pace":"6:57/km","zone":"Zone 4","desc":"Completed run. COACH ANALYSIS: Avg HR 159 bpm at 6:57/km = Zone 4 on your Garmin zones. This pace feels comfortable but your heart is working threshol"}]},{"date":"2026-05-21","dow":"Thursday","sessions":[]},{"date":"2026-05-22","dow":"Friday","sessions":[]},{"date":"2026-05-23","dow":"Saturday","sessions":[{"id":"w0-sat-parkrun","sport":"run","type":"logged","name":"Cannon Hill Parkrun \ud83c\udfc3 \u2014 5.10km","dist":5.1,"dur":28,"hr":"160 bpm (actual)","pace":"5:31/km","zone":"Zone 4","desc":"Completed run. COACH ANALYSIS: Cannon Hill Parkrun \u2014 28:08 finish. Avg HR 160 bpm = Zone 4 (80\u201390% HRR). This was a genuine race effort. 5k equivalent"}]},{"date":"2026-05-24","dow":"Sunday","sessions":[{"id":"w0-sun-bonus","sport":"run","type":"easy","name":"Today \u2014 Easy Bonus Run 3\u20134km","dist":4,"dur":null,"hr":"131\u2013145 bpm","pace":"7:15\u20138:00/km","zone":"Zone 2","desc":"Coming off parkrun yesterday. Keep HR in Zone 2 (131\u2013145). This will feel very slow \u2014 that's correct."}]}]},{"wn":1,"phase":"Couch to 10K","focus":"Build aerobic base from 5k","start":"2026-05-25","end":"2026-05-31","recovery":false,"days":[{"date":"2026-05-25","dow":"Monday","sessions":[{"id":"w1-mon-bonus","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 3km","dist":3,"dur":null,"hr":"131\u2013145 bpm","pace":"7:15\u20138:00/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2026-05-26","dow":"Tuesday","sessions":[]},{"date":"2026-05-27","dow":"Wednesday","sessions":[{"id":"w1-wed-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2026-05-28","dow":"Thursday","sessions":[{"id":"w1-thu-str","sport":"strength","type":"strength","name":"Foundation Strength A \u2014 Knee Stability","dist":null,"dur":20,"hr":"","pace":"","zone":"Strength","desc":"Knee-first strength circuit. 2 rounds. Science: plyometric + bodyweight training improves running economy at speeds under 12km/h (Springer Meta-Analys"}]},{"date":"2026-05-29","dow":"Friday","sessions":[{"id":"w1-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2026-05-30","dow":"Saturday","sessions":[{"id":"w1-sat-easy","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 5km","dist":5,"dur":null,"hr":"131\u2013145 bpm","pace":"7:15\u20138:00/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2026-05-31","dow":"Sunday","sessions":[{"id":"w1-sun-easy","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 4km","dist":4,"dur":null,"hr":"131\u2013145 bpm","pace":"7:15\u20138:00/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]}]},{"wn":2,"phase":"Couch to 10K","focus":"Zone 2 consistency","start":"2026-06-01","end":"2026-06-07","recovery":false,"days":[{"date":"2026-06-01","dow":"Monday","sessions":[]},{"date":"2026-06-02","dow":"Tuesday","sessions":[{"id":"w2-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 3km","dist":3,"dur":null,"hr":"131\u2013145 bpm","pace":"7:15\u20138:00/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2026-06-03","dow":"Wednesday","sessions":[{"id":"w2-wed-str","sport":"strength","type":"strength","name":"Foundation Strength B \u2014 Posterior Chain","dist":null,"dur":20,"hr":"","pace":"","zone":"Strength","desc":"Alternates with Circuit A. Focus on the posterior chain (hamstrings, glutes) \u2014 the engine of distance running."}]},{"date":"2026-06-04","dow":"Thursday","sessions":[{"id":"w2-thu-str","sport":"strength","type":"strength","name":"Foundation Strength A \u2014 Knee Stability","dist":null,"dur":20,"hr":"","pace":"","zone":"Strength","desc":"Knee-first strength circuit. 2 rounds. Science: plyometric + bodyweight training improves running economy at speeds under 12km/h (Springer Meta-Analys"}]},{"date":"2026-06-05","dow":"Friday","sessions":[{"id":"w2-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2026-06-06","dow":"Saturday","sessions":[{"id":"w2-sat-easy","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 5km","dist":5,"dur":null,"hr":"131\u2013145 bpm","pace":"7:15\u20138:00/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2026-06-07","dow":"Sunday","sessions":[{"id":"w2-sun-long","sport":"run","type":"long","name":"Long Run \u2014 6km","dist":6,"dur":null,"hr":"131\u2013145 bpm","pace":"6:45\u20137:30/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":3,"phase":"Couch to 10K","focus":"Progressive load","start":"2026-06-08","end":"2026-06-14","recovery":false,"days":[{"date":"2026-06-08","dow":"Monday","sessions":[]},{"date":"2026-06-09","dow":"Tuesday","sessions":[{"id":"w3-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 4km","dist":4,"dur":null,"hr":"131\u2013145 bpm","pace":"7:15\u20138:00/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2026-06-10","dow":"Wednesday","sessions":[{"id":"w3-wed-str","sport":"strength","type":"strength","name":"Foundation Strength B \u2014 Posterior Chain","dist":null,"dur":20,"hr":"","pace":"","zone":"Strength","desc":"Alternates with Circuit A. Focus on the posterior chain (hamstrings, glutes) \u2014 the engine of distance running."}]},{"date":"2026-06-11","dow":"Thursday","sessions":[{"id":"w3-thu-str","sport":"strength","type":"strength","name":"Foundation Strength A \u2014 Knee Stability","dist":null,"dur":20,"hr":"","pace":"","zone":"Strength","desc":"Knee-first strength circuit. 2 rounds. Science: plyometric + bodyweight training improves running economy at speeds under 12km/h (Springer Meta-Analys"}]},{"date":"2026-06-12","dow":"Friday","sessions":[{"id":"w3-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2026-06-13","dow":"Saturday","sessions":[{"id":"w3-sat-easy","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 5km","dist":5,"dur":null,"hr":"131\u2013145 bpm","pace":"7:15\u20138:00/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2026-06-14","dow":"Sunday","sessions":[{"id":"w3-sun-long","sport":"run","type":"long","name":"Long Run \u2014 7km","dist":7,"dur":null,"hr":"131\u2013145 bpm","pace":"6:45\u20137:30/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":4,"phase":"Couch to 10K","focus":"Deload \u2014 adapt & recover","start":"2026-06-15","end":"2026-06-21","recovery":true,"days":[{"date":"2026-06-15","dow":"Monday","sessions":[]},{"date":"2026-06-16","dow":"Tuesday","sessions":[{"id":"w4-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 3km","dist":3,"dur":null,"hr":"131\u2013145 bpm","pace":"7:15\u20138:00/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2026-06-17","dow":"Wednesday","sessions":[{"id":"w4-wed-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2026-06-18","dow":"Thursday","sessions":[{"id":"w4-thu-str","sport":"strength","type":"strength","name":"Foundation Strength A \u2014 Knee Stability","dist":null,"dur":20,"hr":"","pace":"","zone":"Strength","desc":"Knee-first strength circuit. 2 rounds. Science: plyometric + bodyweight training improves running economy at speeds under 12km/h (Springer Meta-Analys"}]},{"date":"2026-06-19","dow":"Friday","sessions":[{"id":"w4-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2026-06-20","dow":"Saturday","sessions":[{"id":"w4-sat-easy","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 4km","dist":4,"dur":null,"hr":"131\u2013145 bpm","pace":"7:15\u20138:00/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2026-06-21","dow":"Sunday","sessions":[{"id":"w4-sun-easy","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 5km","dist":5,"dur":null,"hr":"131\u2013145 bpm","pace":"7:15\u20138:00/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]}]},{"wn":5,"phase":"Couch to 10K","focus":"Introduce strides","start":"2026-06-22","end":"2026-06-28","recovery":false,"days":[{"date":"2026-06-22","dow":"Monday","sessions":[]},{"date":"2026-06-23","dow":"Tuesday","sessions":[{"id":"w5-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 4km","dist":4,"dur":null,"hr":"131\u2013145 bpm","pace":"7:15\u20138:00/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2026-06-24","dow":"Wednesday","sessions":[{"id":"w5-wed-str","sport":"strength","type":"strength","name":"Foundation Strength B \u2014 Posterior Chain","dist":null,"dur":20,"hr":"","pace":"","zone":"Strength","desc":"Alternates with Circuit A. Focus on the posterior chain (hamstrings, glutes) \u2014 the engine of distance running."}]},{"date":"2026-06-25","dow":"Thursday","sessions":[{"id":"w5-thu-str","sport":"strength","type":"strength","name":"Foundation Strength A \u2014 Knee Stability","dist":null,"dur":20,"hr":"","pace":"","zone":"Strength","desc":"Knee-first strength circuit. 3 rounds. Science: plyometric + bodyweight training improves running economy at speeds under 12km/h (Springer Meta-Analys"}]},{"date":"2026-06-26","dow":"Friday","sessions":[{"id":"w5-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2026-06-27","dow":"Saturday","sessions":[{"id":"w5-sat-easy","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 5km","dist":5,"dur":null,"hr":"131\u2013145 bpm","pace":"7:15\u20138:00/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"},{"id":"w5-sat-str","sport":"run","type":"strides","name":"Strides \u2014 4 \u00d7 100m","dist":null,"dur":5,"hr":"brief spike OK","pace":"80% max speed","zone":"Zone 5 (brief)","desc":"Strides after an easy run. These are not intervals \u2014 they're neuromuscular activations. They improve running economy with zero recovery cost when done"}]},{"date":"2026-06-28","dow":"Sunday","sessions":[{"id":"w5-sun-long","sport":"run","type":"long","name":"Long Run \u2014 8km","dist":8,"dur":null,"hr":"131\u2013145 bpm","pace":"6:45\u20137:30/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":6,"phase":"Couch to 10K","focus":"First fartlek","start":"2026-06-29","end":"2026-07-05","recovery":false,"days":[{"date":"2026-06-29","dow":"Monday","sessions":[]},{"date":"2026-06-30","dow":"Tuesday","sessions":[{"id":"w6-tue-opt","sport":"run","type":"fartlek","name":"Fartlek \u2014 5km","dist":5,"dur":null,"hr":"131\u2013165 bpm mix","pace":"mix: 6:45/km easy + 5:30/km surges","zone":"Zone 2-3","desc":"Unstructured speed play. First quality session. The Kenyans call it 'play with speed.' Listen to your body \u2014 the faster efforts should feel comfortabl"}]},{"date":"2026-07-01","dow":"Wednesday","sessions":[{"id":"w6-wed-str","sport":"strength","type":"strength","name":"Foundation Strength B \u2014 Posterior Chain","dist":null,"dur":20,"hr":"","pace":"","zone":"Strength","desc":"Alternates with Circuit A. Focus on the posterior chain (hamstrings, glutes) \u2014 the engine of distance running."}]},{"date":"2026-07-02","dow":"Thursday","sessions":[{"id":"w6-thu-str","sport":"strength","type":"strength","name":"Foundation Strength A \u2014 Knee Stability","dist":null,"dur":20,"hr":"","pace":"","zone":"Strength","desc":"Knee-first strength circuit. 3 rounds. Science: plyometric + bodyweight training improves running economy at speeds under 12km/h (Springer Meta-Analys"}]},{"date":"2026-07-03","dow":"Friday","sessions":[{"id":"w6-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2026-07-04","dow":"Saturday","sessions":[{"id":"w6-sat-easy","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 5km","dist":5,"dur":null,"hr":"131\u2013145 bpm","pace":"7:15\u20138:00/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2026-07-05","dow":"Sunday","sessions":[{"id":"w6-sun-long","sport":"run","type":"long","name":"Long Run \u2014 9km","dist":9,"dur":null,"hr":"131\u2013145 bpm","pace":"6:45\u20137:30/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":7,"phase":"Couch to 10K","focus":"Deload + Parkrun test","start":"2026-07-06","end":"2026-07-12","recovery":true,"days":[{"date":"2026-07-06","dow":"Monday","sessions":[]},{"date":"2026-07-07","dow":"Tuesday","sessions":[]},{"date":"2026-07-08","dow":"Wednesday","sessions":[{"id":"w7-wed-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2026-07-09","dow":"Thursday","sessions":[{"id":"w7-thu-str","sport":"strength","type":"strength","name":"Foundation Strength A \u2014 Knee Stability","dist":null,"dur":20,"hr":"","pace":"","zone":"Strength","desc":"Knee-first strength circuit. 3 rounds. Science: plyometric + bodyweight training improves running economy at speeds under 12km/h (Springer Meta-Analys"}]},{"date":"2026-07-10","dow":"Friday","sessions":[]},{"date":"2026-07-11","dow":"Saturday","sessions":[{"id":"w7-sat-pk","sport":"run","type":"race","name":"Parkrun 5k \u2014 Race Effort","dist":5.0,"dur":null,"hr":"160\u2013185 bpm (race effort)","pace":"Race effort","zone":"Zone 4-5","desc":"Parkrun as a benchmark. This is your periodic fitness test. Race it. The data tells me how to update your zones and paces for the coming weeks."}]},{"date":"2026-07-12","dow":"Sunday","sessions":[{"id":"w7-sun-easy","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 5km","dist":5,"dur":null,"hr":"131\u2013145 bpm","pace":"6:45\u20137:30/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]}]},{"wn":8,"phase":"Couch to 10K","focus":"Push toward 10k","start":"2026-07-13","end":"2026-07-19","recovery":false,"days":[{"date":"2026-07-13","dow":"Monday","sessions":[]},{"date":"2026-07-14","dow":"Tuesday","sessions":[{"id":"w8-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 5km","dist":5,"dur":null,"hr":"131\u2013145 bpm","pace":"6:45\u20137:30/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2026-07-15","dow":"Wednesday","sessions":[{"id":"w8-wed-str","sport":"strength","type":"strength","name":"Runner's Power Circuit B \u2014 Posterior Chain Power","dist":null,"dur":25,"hr":"","pace":"","zone":"Strength","desc":"Nordic curls are the gold standard for hamstring injury prevention. Step-up jumps build explosive power. Combined methods show the greatest running ec"}]},{"date":"2026-07-16","dow":"Thursday","sessions":[{"id":"w8-thu-str","sport":"strength","type":"strength","name":"Runner's Power Circuit A \u2014 Single-Leg Strength","dist":null,"dur":25,"hr":"","pace":"","zone":"Strength","desc":"Progressive strength. Single-leg dominance builds the stability and power needed for 10k+ distances. Beattie et al. (2014): strength training improves"}]},{"date":"2026-07-17","dow":"Friday","sessions":[{"id":"w8-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2026-07-18","dow":"Saturday","sessions":[{"id":"w8-sat-fart","sport":"run","type":"fartlek","name":"Fartlek \u2014 6km","dist":6,"dur":null,"hr":"131\u2013165 bpm mix","pace":"mix: 6:45/km easy + 5:30/km surges","zone":"Zone 2-3","desc":"Unstructured speed play. First quality session. The Kenyans call it 'play with speed.' Listen to your body \u2014 the faster efforts should feel comfortabl"}]},{"date":"2026-07-19","dow":"Sunday","sessions":[{"id":"w8-sun-long","sport":"run","type":"long","name":"Long Run \u2014 10km","dist":10,"dur":null,"hr":"131\u2013145 bpm","pace":"6:45\u20137:30/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":9,"phase":"Couch to 10K","focus":"10k target week","start":"2026-07-20","end":"2026-07-26","recovery":false,"days":[{"date":"2026-07-20","dow":"Monday","sessions":[]},{"date":"2026-07-21","dow":"Tuesday","sessions":[{"id":"w9-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 5km","dist":5,"dur":null,"hr":"131\u2013145 bpm","pace":"6:45\u20137:30/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2026-07-22","dow":"Wednesday","sessions":[{"id":"w9-wed-str","sport":"strength","type":"strength","name":"Runner's Power Circuit B \u2014 Posterior Chain Power","dist":null,"dur":25,"hr":"","pace":"","zone":"Strength","desc":"Nordic curls are the gold standard for hamstring injury prevention. Step-up jumps build explosive power. Combined methods show the greatest running ec"}]},{"date":"2026-07-23","dow":"Thursday","sessions":[{"id":"w9-thu-str","sport":"strength","type":"strength","name":"Runner's Power Circuit A \u2014 Single-Leg Strength","dist":null,"dur":25,"hr":"","pace":"","zone":"Strength","desc":"Progressive strength. Single-leg dominance builds the stability and power needed for 10k+ distances. Beattie et al. (2014): strength training improves"}]},{"date":"2026-07-24","dow":"Friday","sessions":[{"id":"w9-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2026-07-25","dow":"Saturday","sessions":[{"id":"w9-sat-prog","sport":"run","type":"progression","name":"Progression Run \u2014 7km","dist":7,"dur":null,"hr":"131\u2192165 bpm building","pace":"6:45\u21925:45/km progressive","zone":"Zone 2\u21924","desc":"Start easy, finish strong. This builds mental and physical resilience. The Ingebrigtsen brothers and Kipchoge both use progression runs as staple qual"}]},{"date":"2026-07-26","dow":"Sunday","sessions":[{"id":"w9-sun-long","sport":"run","type":"long","name":"Long Run \u2014 11km","dist":11,"dur":null,"hr":"131\u2013145 bpm","pace":"6:45\u20137:30/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":10,"phase":"Couch to 10K","focus":"10k race simulation","start":"2026-07-27","end":"2026-08-02","recovery":false,"days":[{"date":"2026-07-27","dow":"Monday","sessions":[]},{"date":"2026-07-28","dow":"Tuesday","sessions":[{"id":"w10-tue-thr","sport":"run","type":"threshold","name":"Threshold Intervals \u2014 3\u00d71.0km @ T-pace","dist":6.5,"dur":null,"hr":"158\u2013172 bpm","pace":"5:30\u20135:50/km (threshold)","zone":"Zone 4","desc":"Norwegian-inspired threshold work. These intervals sit at your lactate threshold \u2014 the pace you could sustain for ~1 hour. Research confirms this is w"}]},{"date":"2026-07-29","dow":"Wednesday","sessions":[{"id":"w10-wed-str","sport":"strength","type":"strength","name":"Runner's Power Circuit B \u2014 Posterior Chain Power","dist":null,"dur":25,"hr":"","pace":"","zone":"Strength","desc":"Nordic curls are the gold standard for hamstring injury prevention. Step-up jumps build explosive power. Combined methods show the greatest running ec"}]},{"date":"2026-07-30","dow":"Thursday","sessions":[{"id":"w10-thu-str","sport":"strength","type":"strength","name":"Runner's Power Circuit A \u2014 Single-Leg Strength","dist":null,"dur":25,"hr":"","pace":"","zone":"Strength","desc":"Progressive strength. Single-leg dominance builds the stability and power needed for 10k+ distances. Beattie et al. (2014): strength training improves"}]},{"date":"2026-07-31","dow":"Friday","sessions":[{"id":"w10-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2026-08-01","dow":"Saturday","sessions":[{"id":"w10-sat-easy","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 5km","dist":5,"dur":null,"hr":"131\u2013145 bpm","pace":"6:45\u20137:30/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2026-08-02","dow":"Sunday","sessions":[{"id":"w10-sun-long","sport":"run","type":"long","name":"Long Run \u2014 10km","dist":10,"dur":null,"hr":"131\u2013145 bpm","pace":"6:45\u20137:30/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":11,"phase":"Couch to 10K","focus":"Deload pre-10k","start":"2026-08-03","end":"2026-08-09","recovery":true,"days":[{"date":"2026-08-03","dow":"Monday","sessions":[]},{"date":"2026-08-04","dow":"Tuesday","sessions":[{"id":"w11-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 4km","dist":4,"dur":null,"hr":"131\u2013145 bpm","pace":"6:45\u20137:30/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2026-08-05","dow":"Wednesday","sessions":[{"id":"w11-wed-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2026-08-06","dow":"Thursday","sessions":[{"id":"w11-thu-str","sport":"strength","type":"strength","name":"Runner's Power Circuit A \u2014 Single-Leg Strength","dist":null,"dur":25,"hr":"","pace":"","zone":"Strength","desc":"Progressive strength. Single-leg dominance builds the stability and power needed for 10k+ distances. Beattie et al. (2014): strength training improves"}]},{"date":"2026-08-07","dow":"Friday","sessions":[]},{"date":"2026-08-08","dow":"Saturday","sessions":[{"id":"w11-sat-easy","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 5km","dist":5,"dur":null,"hr":"131\u2013145 bpm","pace":"6:45\u20137:30/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2026-08-09","dow":"Sunday","sessions":[{"id":"w11-sun-easy","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 7km","dist":7,"dur":null,"hr":"131\u2013145 bpm","pace":"6:45\u20137:30/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]}]},{"wn":12,"phase":"Couch to 10K","focus":"10K RACE / TIME TRIAL","start":"2026-08-10","end":"2026-08-16","recovery":false,"days":[{"date":"2026-08-10","dow":"Monday","sessions":[]},{"date":"2026-08-11","dow":"Tuesday","sessions":[]},{"date":"2026-08-12","dow":"Wednesday","sessions":[]},{"date":"2026-08-13","dow":"Thursday","sessions":[]},{"date":"2026-08-14","dow":"Friday","sessions":[]},{"date":"2026-08-15","dow":"Saturday","sessions":[{"id":"w12-sat-easy","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 5km","dist":5,"dur":null,"hr":"131\u2013145 bpm","pace":"6:45\u20137:30/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2026-08-16","dow":"Sunday","sessions":[{"id":"w12-sun-10k","sport":"run","type":"race","name":"10K Race / Time Trial","dist":10.0,"dur":null,"hr":"162\u2013176 bpm","pace":"6:00\u20136:20/km","zone":"Zone 4-5","desc":"This is your Phase 1 graduation. Run a 10k race or time-trial. Everything you've built is in your legs."}]}]},{"wn":13,"phase":"Base Building","focus":"Aerobic base + quality introduction","start":"2026-08-17","end":"2026-08-23","recovery":false,"days":[{"date":"2026-08-17","dow":"Monday","sessions":[]},{"date":"2026-08-18","dow":"Tuesday","sessions":[{"id":"w13-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 4km","dist":4,"dur":null,"hr":"131\u2013145 bpm","pace":"6:20\u20137:00/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2026-08-19","dow":"Wednesday","sessions":[{"id":"w13-wed-str","sport":"strength","type":"strength","name":"Runner's Power Circuit B \u2014 Posterior Chain Power","dist":null,"dur":25,"hr":"","pace":"","zone":"Strength","desc":"Nordic curls are the gold standard for hamstring injury prevention. Step-up jumps build explosive power. Combined methods show the greatest running ec"}]},{"date":"2026-08-20","dow":"Thursday","sessions":[{"id":"w13-thu-str","sport":"strength","type":"strength","name":"Runner's Power Circuit A \u2014 Single-Leg Strength","dist":null,"dur":25,"hr":"","pace":"","zone":"Strength","desc":"Progressive strength. Single-leg dominance builds the stability and power needed for 10k+ distances. Beattie et al. (2014): strength training improves"}]},{"date":"2026-08-21","dow":"Friday","sessions":[{"id":"w13-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2026-08-22","dow":"Saturday","sessions":[{"id":"w13-sat","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 6km","dist":6,"dur":null,"hr":"131\u2013145 bpm","pace":"6:20\u20137:00/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2026-08-23","dow":"Sunday","sessions":[{"id":"w13-sun-long","sport":"run","type":"long","name":"Long Run \u2014 11km","dist":11,"dur":null,"hr":"131\u2013145 bpm","pace":"6:20\u20137:00/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":14,"phase":"Base Building","focus":"Deload","start":"2026-08-24","end":"2026-08-30","recovery":true,"days":[{"date":"2026-08-24","dow":"Monday","sessions":[]},{"date":"2026-08-25","dow":"Tuesday","sessions":[{"id":"w14-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 5km","dist":5,"dur":null,"hr":"131\u2013145 bpm","pace":"6:20\u20137:00/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2026-08-26","dow":"Wednesday","sessions":[{"id":"w14-wed-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2026-08-27","dow":"Thursday","sessions":[{"id":"w14-thu-str","sport":"strength","type":"strength","name":"Runner's Power Circuit A \u2014 Single-Leg Strength","dist":null,"dur":25,"hr":"","pace":"","zone":"Strength","desc":"Progressive strength. Single-leg dominance builds the stability and power needed for 10k+ distances. Beattie et al. (2014): strength training improves"}]},{"date":"2026-08-28","dow":"Friday","sessions":[{"id":"w14-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2026-08-29","dow":"Saturday","sessions":[{"id":"w14-sat","sport":"run","type":"fartlek","name":"Fartlek \u2014 6km","dist":6,"dur":null,"hr":"131\u2013165 bpm mix","pace":"mix: 6:45/km easy + 5:30/km surges","zone":"Zone 2-3","desc":"Unstructured speed play. First quality session. The Kenyans call it 'play with speed.' Listen to your body \u2014 the faster efforts should feel comfortabl"}]},{"date":"2026-08-30","dow":"Sunday","sessions":[{"id":"w14-sun-long","sport":"run","type":"long","name":"Long Run \u2014 12km","dist":12,"dur":null,"hr":"131\u2013145 bpm","pace":"6:20\u20137:00/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":15,"phase":"Base Building","focus":"Aerobic base + quality introduction","start":"2026-08-31","end":"2026-09-06","recovery":false,"days":[{"date":"2026-08-31","dow":"Monday","sessions":[]},{"date":"2026-09-01","dow":"Tuesday","sessions":[{"id":"w15-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 5km","dist":5,"dur":null,"hr":"131\u2013145 bpm","pace":"6:20\u20137:00/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2026-09-02","dow":"Wednesday","sessions":[{"id":"w15-wed-str","sport":"strength","type":"strength","name":"Runner's Power Circuit B \u2014 Posterior Chain Power","dist":null,"dur":25,"hr":"","pace":"","zone":"Strength","desc":"Nordic curls are the gold standard for hamstring injury prevention. Step-up jumps build explosive power. Combined methods show the greatest running ec"}]},{"date":"2026-09-03","dow":"Thursday","sessions":[{"id":"w15-thu-str","sport":"strength","type":"strength","name":"Runner's Power Circuit A \u2014 Single-Leg Strength","dist":null,"dur":25,"hr":"","pace":"","zone":"Strength","desc":"Progressive strength. Single-leg dominance builds the stability and power needed for 10k+ distances. Beattie et al. (2014): strength training improves"}]},{"date":"2026-09-04","dow":"Friday","sessions":[{"id":"w15-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2026-09-05","dow":"Saturday","sessions":[{"id":"w15-sat","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 6km","dist":6,"dur":null,"hr":"131\u2013145 bpm","pace":"6:20\u20137:00/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2026-09-06","dow":"Sunday","sessions":[{"id":"w15-sun-long","sport":"run","type":"long","name":"Long Run \u2014 13km","dist":13,"dur":null,"hr":"131\u2013145 bpm","pace":"6:20\u20137:00/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":16,"phase":"Base Building","focus":"Deload","start":"2026-09-07","end":"2026-09-13","recovery":true,"days":[{"date":"2026-09-07","dow":"Monday","sessions":[]},{"date":"2026-09-08","dow":"Tuesday","sessions":[{"id":"w16-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 4km","dist":4,"dur":null,"hr":"131\u2013145 bpm","pace":"6:20\u20137:00/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2026-09-09","dow":"Wednesday","sessions":[{"id":"w16-wed-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2026-09-10","dow":"Thursday","sessions":[{"id":"w16-thu-str","sport":"strength","type":"strength","name":"Runner's Power Circuit A \u2014 Single-Leg Strength","dist":null,"dur":25,"hr":"","pace":"","zone":"Strength","desc":"Progressive strength. Single-leg dominance builds the stability and power needed for 10k+ distances. Beattie et al. (2014): strength training improves"}]},{"date":"2026-09-11","dow":"Friday","sessions":[{"id":"w16-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2026-09-12","dow":"Saturday","sessions":[{"id":"w16-sat","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 5km","dist":5,"dur":null,"hr":"131\u2013145 bpm","pace":"6:20\u20137:00/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2026-09-13","dow":"Sunday","sessions":[{"id":"w16-sun-long","sport":"run","type":"long","name":"Long Run \u2014 10km","dist":10,"dur":null,"hr":"131\u2013145 bpm","pace":"6:20\u20137:00/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":17,"phase":"Base Building","focus":"Aerobic base + quality introduction","start":"2026-09-14","end":"2026-09-20","recovery":false,"days":[{"date":"2026-09-14","dow":"Monday","sessions":[]},{"date":"2026-09-15","dow":"Tuesday","sessions":[{"id":"w17-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 5km","dist":5,"dur":null,"hr":"131\u2013145 bpm","pace":"6:20\u20137:00/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2026-09-16","dow":"Wednesday","sessions":[{"id":"w17-wed-str","sport":"strength","type":"strength","name":"Runner's Power Circuit B \u2014 Posterior Chain Power","dist":null,"dur":25,"hr":"","pace":"","zone":"Strength","desc":"Nordic curls are the gold standard for hamstring injury prevention. Step-up jumps build explosive power. Combined methods show the greatest running ec"}]},{"date":"2026-09-17","dow":"Thursday","sessions":[{"id":"w17-thu-str","sport":"strength","type":"strength","name":"Runner's Power Circuit A \u2014 Single-Leg Strength","dist":null,"dur":25,"hr":"","pace":"","zone":"Strength","desc":"Progressive strength. Single-leg dominance builds the stability and power needed for 10k+ distances. Beattie et al. (2014): strength training improves"}]},{"date":"2026-09-18","dow":"Friday","sessions":[{"id":"w17-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2026-09-19","dow":"Saturday","sessions":[{"id":"w17-sat","sport":"run","type":"threshold","name":"Threshold Intervals \u2014 3\u00d71.2km @ T-pace","dist":7.1,"dur":null,"hr":"158\u2013172 bpm","pace":"5:30\u20135:50/km (threshold)","zone":"Zone 4","desc":"Norwegian-inspired threshold work. These intervals sit at your lactate threshold \u2014 the pace you could sustain for ~1 hour. Research confirms this is w"}]},{"date":"2026-09-20","dow":"Sunday","sessions":[{"id":"w17-sun-long","sport":"run","type":"long","name":"Long Run \u2014 14km","dist":14,"dur":null,"hr":"131\u2013145 bpm","pace":"6:20\u20137:00/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":18,"phase":"Base Building","focus":"Aerobic base + quality introduction","start":"2026-09-21","end":"2026-09-27","recovery":false,"days":[{"date":"2026-09-21","dow":"Monday","sessions":[]},{"date":"2026-09-22","dow":"Tuesday","sessions":[{"id":"w18-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 5km","dist":5,"dur":null,"hr":"131\u2013145 bpm","pace":"6:20\u20137:00/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2026-09-23","dow":"Wednesday","sessions":[{"id":"w18-wed-str","sport":"strength","type":"strength","name":"Runner's Power Circuit B \u2014 Posterior Chain Power","dist":null,"dur":25,"hr":"","pace":"","zone":"Strength","desc":"Nordic curls are the gold standard for hamstring injury prevention. Step-up jumps build explosive power. Combined methods show the greatest running ec"}]},{"date":"2026-09-24","dow":"Thursday","sessions":[{"id":"w18-thu-str","sport":"strength","type":"strength","name":"Runner's Power Circuit A \u2014 Single-Leg Strength","dist":null,"dur":25,"hr":"","pace":"","zone":"Strength","desc":"Progressive strength. Single-leg dominance builds the stability and power needed for 10k+ distances. Beattie et al. (2014): strength training improves"}]},{"date":"2026-09-25","dow":"Friday","sessions":[{"id":"w18-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2026-09-26","dow":"Saturday","sessions":[{"id":"w18-sat","sport":"run","type":"progression","name":"Progression Run \u2014 7km","dist":7,"dur":null,"hr":"131\u2192165 bpm building","pace":"6:45\u21925:45/km progressive","zone":"Zone 2\u21924","desc":"Start easy, finish strong. This builds mental and physical resilience. The Ingebrigtsen brothers and Kipchoge both use progression runs as staple qual"}]},{"date":"2026-09-27","dow":"Sunday","sessions":[{"id":"w18-sun-long","sport":"run","type":"long","name":"Long Run \u2014 15km","dist":15,"dur":null,"hr":"131\u2013145 bpm","pace":"6:20\u20137:00/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":19,"phase":"Base Building","focus":"Deload","start":"2026-09-28","end":"2026-10-04","recovery":true,"days":[{"date":"2026-09-28","dow":"Monday","sessions":[]},{"date":"2026-09-29","dow":"Tuesday","sessions":[{"id":"w19-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 4km","dist":4,"dur":null,"hr":"131\u2013145 bpm","pace":"6:20\u20137:00/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2026-09-30","dow":"Wednesday","sessions":[{"id":"w19-wed-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2026-10-01","dow":"Thursday","sessions":[{"id":"w19-thu-str","sport":"strength","type":"strength","name":"Runner's Power Circuit A \u2014 Single-Leg Strength","dist":null,"dur":25,"hr":"","pace":"","zone":"Strength","desc":"Progressive strength. Single-leg dominance builds the stability and power needed for 10k+ distances. Beattie et al. (2014): strength training improves"}]},{"date":"2026-10-02","dow":"Friday","sessions":[{"id":"w19-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2026-10-03","dow":"Saturday","sessions":[{"id":"w19-sat","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 6km","dist":6,"dur":null,"hr":"131\u2013145 bpm","pace":"6:20\u20137:00/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2026-10-04","dow":"Sunday","sessions":[{"id":"w19-sun-long","sport":"run","type":"long","name":"Long Run \u2014 12km","dist":12,"dur":null,"hr":"131\u2013145 bpm","pace":"6:20\u20137:00/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":20,"phase":"Base Building","focus":"Aerobic base + quality introduction","start":"2026-10-05","end":"2026-10-11","recovery":false,"days":[{"date":"2026-10-05","dow":"Monday","sessions":[]},{"date":"2026-10-06","dow":"Tuesday","sessions":[{"id":"w20-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 6km","dist":6,"dur":null,"hr":"131\u2013145 bpm","pace":"6:20\u20137:00/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2026-10-07","dow":"Wednesday","sessions":[{"id":"w20-wed-str","sport":"strength","type":"strength","name":"Runner's Power Circuit B \u2014 Posterior Chain Power","dist":null,"dur":25,"hr":"","pace":"","zone":"Strength","desc":"Nordic curls are the gold standard for hamstring injury prevention. Step-up jumps build explosive power. Combined methods show the greatest running ec"}]},{"date":"2026-10-08","dow":"Thursday","sessions":[{"id":"w20-thu-str","sport":"strength","type":"strength","name":"Runner's Power Circuit A \u2014 Single-Leg Strength","dist":null,"dur":25,"hr":"","pace":"","zone":"Strength","desc":"Progressive strength. Single-leg dominance builds the stability and power needed for 10k+ distances. Beattie et al. (2014): strength training improves"}]},{"date":"2026-10-09","dow":"Friday","sessions":[{"id":"w20-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2026-10-10","dow":"Saturday","sessions":[{"id":"w20-sat","sport":"run","type":"fartlek","name":"Fartlek \u2014 8km","dist":8,"dur":null,"hr":"131\u2013165 bpm mix","pace":"mix: 6:45/km easy + 5:30/km surges","zone":"Zone 2-3","desc":"Unstructured speed play. First quality session. The Kenyans call it 'play with speed.' Listen to your body \u2014 the faster efforts should feel comfortabl"}]},{"date":"2026-10-11","dow":"Sunday","sessions":[{"id":"w20-sun-long","sport":"run","type":"long","name":"Long Run \u2014 16km","dist":16,"dur":null,"hr":"131\u2013145 bpm","pace":"6:20\u20137:00/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":21,"phase":"Base Building","focus":"Aerobic base + quality introduction","start":"2026-10-12","end":"2026-10-18","recovery":false,"days":[{"date":"2026-10-12","dow":"Monday","sessions":[]},{"date":"2026-10-13","dow":"Tuesday","sessions":[{"id":"w21-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 6km","dist":6,"dur":null,"hr":"131\u2013145 bpm","pace":"6:20\u20137:00/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2026-10-14","dow":"Wednesday","sessions":[{"id":"w21-wed-str","sport":"strength","type":"strength","name":"Runner's Power Circuit B \u2014 Posterior Chain Power","dist":null,"dur":25,"hr":"","pace":"","zone":"Strength","desc":"Nordic curls are the gold standard for hamstring injury prevention. Step-up jumps build explosive power. Combined methods show the greatest running ec"}]},{"date":"2026-10-15","dow":"Thursday","sessions":[{"id":"w21-thu-str","sport":"strength","type":"strength","name":"Runner's Power Circuit A \u2014 Single-Leg Strength","dist":null,"dur":25,"hr":"","pace":"","zone":"Strength","desc":"Progressive strength. Single-leg dominance builds the stability and power needed for 10k+ distances. Beattie et al. (2014): strength training improves"}]},{"date":"2026-10-16","dow":"Friday","sessions":[{"id":"w21-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2026-10-17","dow":"Saturday","sessions":[{"id":"w21-sat","sport":"run","type":"threshold","name":"Threshold Intervals \u2014 4\u00d71.2km @ T-pace","dist":8.3,"dur":null,"hr":"158\u2013172 bpm","pace":"5:30\u20135:50/km (threshold)","zone":"Zone 4","desc":"Norwegian-inspired threshold work. These intervals sit at your lactate threshold \u2014 the pace you could sustain for ~1 hour. Research confirms this is w"}]},{"date":"2026-10-18","dow":"Sunday","sessions":[{"id":"w21-sun-long","sport":"run","type":"long","name":"Long Run \u2014 17km","dist":17,"dur":null,"hr":"131\u2013145 bpm","pace":"6:20\u20137:00/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":22,"phase":"Base Building","focus":"Aerobic base + quality introduction","start":"2026-10-19","end":"2026-10-25","recovery":false,"days":[{"date":"2026-10-19","dow":"Monday","sessions":[]},{"date":"2026-10-20","dow":"Tuesday","sessions":[{"id":"w22-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 5km","dist":5,"dur":null,"hr":"131\u2013145 bpm","pace":"6:20\u20137:00/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2026-10-21","dow":"Wednesday","sessions":[{"id":"w22-wed-str","sport":"strength","type":"strength","name":"Runner's Power Circuit B \u2014 Posterior Chain Power","dist":null,"dur":25,"hr":"","pace":"","zone":"Strength","desc":"Nordic curls are the gold standard for hamstring injury prevention. Step-up jumps build explosive power. Combined methods show the greatest running ec"}]},{"date":"2026-10-22","dow":"Thursday","sessions":[{"id":"w22-thu-str","sport":"strength","type":"strength","name":"Runner's Power Circuit A \u2014 Single-Leg Strength","dist":null,"dur":25,"hr":"","pace":"","zone":"Strength","desc":"Progressive strength. Single-leg dominance builds the stability and power needed for 10k+ distances. Beattie et al. (2014): strength training improves"}]},{"date":"2026-10-23","dow":"Friday","sessions":[{"id":"w22-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2026-10-24","dow":"Saturday","sessions":[{"id":"w22-sat","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 6km","dist":6,"dur":null,"hr":"131\u2013145 bpm","pace":"6:20\u20137:00/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2026-10-25","dow":"Sunday","sessions":[{"id":"w22-sun-long","sport":"run","type":"long","name":"Long Run \u2014 14km","dist":14,"dur":null,"hr":"131\u2013145 bpm","pace":"6:20\u20137:00/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":23,"phase":"Base Building","focus":"Aerobic base + quality introduction","start":"2026-10-26","end":"2026-11-01","recovery":false,"days":[{"date":"2026-10-26","dow":"Monday","sessions":[]},{"date":"2026-10-27","dow":"Tuesday","sessions":[{"id":"w23-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 6km","dist":6,"dur":null,"hr":"131\u2013145 bpm","pace":"6:20\u20137:00/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2026-10-28","dow":"Wednesday","sessions":[{"id":"w23-wed-str","sport":"strength","type":"strength","name":"Runner's Power Circuit B \u2014 Posterior Chain Power","dist":null,"dur":25,"hr":"","pace":"","zone":"Strength","desc":"Nordic curls are the gold standard for hamstring injury prevention. Step-up jumps build explosive power. Combined methods show the greatest running ec"}]},{"date":"2026-10-29","dow":"Thursday","sessions":[{"id":"w23-thu-str","sport":"strength","type":"strength","name":"Runner's Power Circuit A \u2014 Single-Leg Strength","dist":null,"dur":25,"hr":"","pace":"","zone":"Strength","desc":"Progressive strength. Single-leg dominance builds the stability and power needed for 10k+ distances. Beattie et al. (2014): strength training improves"}]},{"date":"2026-10-30","dow":"Friday","sessions":[{"id":"w23-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2026-10-31","dow":"Saturday","sessions":[{"id":"w23-sat","sport":"run","type":"progression","name":"Progression Run \u2014 9km","dist":9,"dur":null,"hr":"131\u2192165 bpm building","pace":"6:45\u21925:45/km progressive","zone":"Zone 2\u21924","desc":"Start easy, finish strong. This builds mental and physical resilience. The Ingebrigtsen brothers and Kipchoge both use progression runs as staple qual"}]},{"date":"2026-11-01","dow":"Sunday","sessions":[{"id":"w23-sun-long","sport":"run","type":"long","name":"Long Run \u2014 18km","dist":18,"dur":null,"hr":"131\u2013145 bpm","pace":"6:20\u20137:00/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":24,"phase":"Base Building","focus":"Aerobic base + quality introduction","start":"2026-11-02","end":"2026-11-08","recovery":false,"days":[{"date":"2026-11-02","dow":"Monday","sessions":[]},{"date":"2026-11-03","dow":"Tuesday","sessions":[{"id":"w24-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 5km","dist":5,"dur":null,"hr":"131\u2013145 bpm","pace":"6:20\u20137:00/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2026-11-04","dow":"Wednesday","sessions":[{"id":"w24-wed-str","sport":"strength","type":"strength","name":"Runner's Power Circuit B \u2014 Posterior Chain Power","dist":null,"dur":25,"hr":"","pace":"","zone":"Strength","desc":"Nordic curls are the gold standard for hamstring injury prevention. Step-up jumps build explosive power. Combined methods show the greatest running ec"}]},{"date":"2026-11-05","dow":"Thursday","sessions":[{"id":"w24-thu-str","sport":"strength","type":"strength","name":"Runner's Power Circuit A \u2014 Single-Leg Strength","dist":null,"dur":25,"hr":"","pace":"","zone":"Strength","desc":"Progressive strength. Single-leg dominance builds the stability and power needed for 10k+ distances. Beattie et al. (2014): strength training improves"}]},{"date":"2026-11-06","dow":"Friday","sessions":[{"id":"w24-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2026-11-07","dow":"Saturday","sessions":[{"id":"w24-sat","sport":"run","type":"race","name":"Parkrun 5k \u2014 Race Effort","dist":5.0,"dur":null,"hr":"160\u2013185 bpm (race effort)","pace":"Race effort","zone":"Zone 4-5","desc":"Parkrun as a benchmark. This is your periodic fitness test. Race it. The data tells me how to update your zones and paces for the coming weeks."}]},{"date":"2026-11-08","dow":"Sunday","sessions":[{"id":"w24-sun-long","sport":"run","type":"long","name":"Long Run \u2014 16km","dist":16,"dur":null,"hr":"131\u2013145 bpm","pace":"6:20\u20137:00/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":25,"phase":"Base Building","focus":"Aerobic base + quality introduction","start":"2026-11-09","end":"2026-11-15","recovery":false,"days":[{"date":"2026-11-09","dow":"Monday","sessions":[]},{"date":"2026-11-10","dow":"Tuesday","sessions":[{"id":"w25-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 6km","dist":6,"dur":null,"hr":"131\u2013145 bpm","pace":"6:20\u20137:00/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2026-11-11","dow":"Wednesday","sessions":[{"id":"w25-wed-str","sport":"strength","type":"strength","name":"Runner's Power Circuit B \u2014 Posterior Chain Power","dist":null,"dur":25,"hr":"","pace":"","zone":"Strength","desc":"Nordic curls are the gold standard for hamstring injury prevention. Step-up jumps build explosive power. Combined methods show the greatest running ec"}]},{"date":"2026-11-12","dow":"Thursday","sessions":[{"id":"w25-thu-str","sport":"strength","type":"strength","name":"Runner's Power Circuit A \u2014 Single-Leg Strength","dist":null,"dur":25,"hr":"","pace":"","zone":"Strength","desc":"Progressive strength. Single-leg dominance builds the stability and power needed for 10k+ distances. Beattie et al. (2014): strength training improves"}]},{"date":"2026-11-13","dow":"Friday","sessions":[{"id":"w25-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2026-11-14","dow":"Saturday","sessions":[{"id":"w25-sat","sport":"run","type":"race_pace","name":"Half Marathon Race Pace Run \u2014 8km","dist":8,"dur":null,"hr":"150\u2013163 bpm","pace":"6:10\u20136:30/km (HM goal pace)","zone":"Zone 3","desc":"Race pace simulation. Based on your 5k of 28:43 (VDOT ~33), projected HM pace is 6:10\u20136:30/km for a first HM finish. This session teaches your body an"}]},{"date":"2026-11-15","dow":"Sunday","sessions":[{"id":"w25-sun-long","sport":"run","type":"long","name":"Long Run \u2014 19km","dist":19,"dur":null,"hr":"131\u2013145 bpm","pace":"6:20\u20137:00/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":26,"phase":"Base Building","focus":"Deload","start":"2026-11-16","end":"2026-11-22","recovery":true,"days":[{"date":"2026-11-16","dow":"Monday","sessions":[]},{"date":"2026-11-17","dow":"Tuesday","sessions":[{"id":"w26-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 4km","dist":4,"dur":null,"hr":"131\u2013145 bpm","pace":"6:20\u20137:00/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2026-11-18","dow":"Wednesday","sessions":[{"id":"w26-wed-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2026-11-19","dow":"Thursday","sessions":[{"id":"w26-thu-str","sport":"strength","type":"strength","name":"Runner's Power Circuit A \u2014 Single-Leg Strength","dist":null,"dur":25,"hr":"","pace":"","zone":"Strength","desc":"Progressive strength. Single-leg dominance builds the stability and power needed for 10k+ distances. Beattie et al. (2014): strength training improves"}]},{"date":"2026-11-20","dow":"Friday","sessions":[{"id":"w26-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2026-11-21","dow":"Saturday","sessions":[{"id":"w26-sat","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 5km","dist":5,"dur":null,"hr":"131\u2013145 bpm","pace":"6:20\u20137:00/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2026-11-22","dow":"Sunday","sessions":[{"id":"w26-sun-long","sport":"run","type":"long","name":"Long Run \u2014 12km","dist":12,"dur":null,"hr":"131\u2013145 bpm","pace":"6:20\u20137:00/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":27,"phase":"Half Marathon Build","focus":"HM-specific fitness","start":"2026-11-23","end":"2026-11-29","recovery":false,"days":[{"date":"2026-11-23","dow":"Monday","sessions":[]},{"date":"2026-11-24","dow":"Tuesday","sessions":[{"id":"w27-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 6km","dist":6,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:45/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2026-11-25","dow":"Wednesday","sessions":[{"id":"w27-wed-str","sport":"strength","type":"strength","name":"Race-Power Plyometric Circuit B \u2014 Hip Flexor Power","dist":null,"dur":30,"hr":"","pace":"","zone":"Strength","desc":"Hip flexor power and calf explosiveness determine your top-end pace in the half marathon. Split jumps replicate the single-leg push-off of running at "}]},{"date":"2026-11-26","dow":"Thursday","sessions":[{"id":"w27-thu-str","sport":"strength","type":"strength","name":"Race-Power Plyometric Circuit A \u2014 Running Economy","dist":null,"dur":30,"hr":"","pace":"","zone":"Strength","desc":"Plyometrics at this phase directly improve running economy. Saunders et al.: 6 weeks of plyometric training improved economy in middle and long-distan"}]},{"date":"2026-11-27","dow":"Friday","sessions":[{"id":"w27-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2026-11-28","dow":"Saturday","sessions":[{"id":"w27-sat","sport":"run","type":"threshold","name":"Threshold Intervals \u2014 4\u00d71.5km @ T-pace","dist":9.5,"dur":null,"hr":"158\u2013172 bpm","pace":"5:30\u20135:50/km (threshold)","zone":"Zone 4","desc":"Norwegian-inspired threshold work. These intervals sit at your lactate threshold \u2014 the pace you could sustain for ~1 hour. Research confirms this is w"}]},{"date":"2026-11-29","dow":"Sunday","sessions":[{"id":"w27-sun-long","sport":"run","type":"long","name":"Long Run \u2014 17km","dist":17,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:40/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":28,"phase":"Half Marathon Build","focus":"HM-specific fitness","start":"2026-11-30","end":"2026-12-06","recovery":false,"days":[{"date":"2026-11-30","dow":"Monday","sessions":[]},{"date":"2026-12-01","dow":"Tuesday","sessions":[{"id":"w28-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 6km","dist":6,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:45/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2026-12-02","dow":"Wednesday","sessions":[{"id":"w28-wed-str","sport":"strength","type":"strength","name":"Race-Power Plyometric Circuit B \u2014 Hip Flexor Power","dist":null,"dur":30,"hr":"","pace":"","zone":"Strength","desc":"Hip flexor power and calf explosiveness determine your top-end pace in the half marathon. Split jumps replicate the single-leg push-off of running at "}]},{"date":"2026-12-03","dow":"Thursday","sessions":[{"id":"w28-thu-str","sport":"strength","type":"strength","name":"Race-Power Plyometric Circuit A \u2014 Running Economy","dist":null,"dur":30,"hr":"","pace":"","zone":"Strength","desc":"Plyometrics at this phase directly improve running economy. Saunders et al.: 6 weeks of plyometric training improved economy in middle and long-distan"}]},{"date":"2026-12-04","dow":"Friday","sessions":[{"id":"w28-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2026-12-05","dow":"Saturday","sessions":[{"id":"w28-sat","sport":"run","type":"race_pace","name":"Half Marathon Race Pace Run \u2014 9km","dist":9,"dur":null,"hr":"150\u2013163 bpm","pace":"6:10\u20136:30/km (HM goal pace)","zone":"Zone 3","desc":"Race pace simulation. Based on your 5k of 28:43 (VDOT ~33), projected HM pace is 6:10\u20136:30/km for a first HM finish. This session teaches your body an"}]},{"date":"2026-12-06","dow":"Sunday","sessions":[{"id":"w28-sun-long","sport":"run","type":"long","name":"Long Run \u2014 18km","dist":18,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:40/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":29,"phase":"Half Marathon Build","focus":"HM-specific fitness","start":"2026-12-07","end":"2026-12-13","recovery":false,"days":[{"date":"2026-12-07","dow":"Monday","sessions":[]},{"date":"2026-12-08","dow":"Tuesday","sessions":[{"id":"w29-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 6km","dist":6,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:45/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2026-12-09","dow":"Wednesday","sessions":[{"id":"w29-wed-str","sport":"strength","type":"strength","name":"Race-Power Plyometric Circuit B \u2014 Hip Flexor Power","dist":null,"dur":30,"hr":"","pace":"","zone":"Strength","desc":"Hip flexor power and calf explosiveness determine your top-end pace in the half marathon. Split jumps replicate the single-leg push-off of running at "}]},{"date":"2026-12-10","dow":"Thursday","sessions":[{"id":"w29-thu-str","sport":"strength","type":"strength","name":"Race-Power Plyometric Circuit A \u2014 Running Economy","dist":null,"dur":30,"hr":"","pace":"","zone":"Strength","desc":"Plyometrics at this phase directly improve running economy. Saunders et al.: 6 weeks of plyometric training improved economy in middle and long-distan"}]},{"date":"2026-12-11","dow":"Friday","sessions":[{"id":"w29-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2026-12-12","dow":"Saturday","sessions":[{"id":"w29-sat","sport":"run","type":"progression","name":"Progression Run \u2014 9km","dist":9,"dur":null,"hr":"131\u2192165 bpm building","pace":"6:45\u21925:45/km progressive","zone":"Zone 2\u21924","desc":"Start easy, finish strong. This builds mental and physical resilience. The Ingebrigtsen brothers and Kipchoge both use progression runs as staple qual"}]},{"date":"2026-12-13","dow":"Sunday","sessions":[{"id":"w29-sun-long","sport":"run","type":"long","name":"Long Run \u2014 19km","dist":19,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:40/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":30,"phase":"Half Marathon Build","focus":"Deload","start":"2026-12-14","end":"2026-12-20","recovery":true,"days":[{"date":"2026-12-14","dow":"Monday","sessions":[]},{"date":"2026-12-15","dow":"Tuesday","sessions":[{"id":"w30-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 5km","dist":5,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:45/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2026-12-16","dow":"Wednesday","sessions":[{"id":"w30-wed-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2026-12-17","dow":"Thursday","sessions":[{"id":"w30-thu-str","sport":"strength","type":"strength","name":"Race-Power Plyometric Circuit A \u2014 Running Economy","dist":null,"dur":30,"hr":"","pace":"","zone":"Strength","desc":"Plyometrics at this phase directly improve running economy. Saunders et al.: 6 weeks of plyometric training improved economy in middle and long-distan"}]},{"date":"2026-12-18","dow":"Friday","sessions":[{"id":"w30-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2026-12-19","dow":"Saturday","sessions":[{"id":"w30-sat","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 6km","dist":6,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:45/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2026-12-20","dow":"Sunday","sessions":[{"id":"w30-sun-long","sport":"run","type":"long","name":"Long Run \u2014 15km","dist":15,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:40/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":31,"phase":"Half Marathon Build","focus":"HM-specific fitness","start":"2026-12-21","end":"2026-12-27","recovery":false,"days":[{"date":"2026-12-21","dow":"Monday","sessions":[]},{"date":"2026-12-22","dow":"Tuesday","sessions":[{"id":"w31-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 7km","dist":7,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:45/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2026-12-23","dow":"Wednesday","sessions":[{"id":"w31-wed-str","sport":"strength","type":"strength","name":"Race-Power Plyometric Circuit B \u2014 Hip Flexor Power","dist":null,"dur":30,"hr":"","pace":"","zone":"Strength","desc":"Hip flexor power and calf explosiveness determine your top-end pace in the half marathon. Split jumps replicate the single-leg push-off of running at "}]},{"date":"2026-12-24","dow":"Thursday","sessions":[{"id":"w31-thu-str","sport":"strength","type":"strength","name":"Race-Power Plyometric Circuit A \u2014 Running Economy","dist":null,"dur":30,"hr":"","pace":"","zone":"Strength","desc":"Plyometrics at this phase directly improve running economy. Saunders et al.: 6 weeks of plyometric training improved economy in middle and long-distan"}]},{"date":"2026-12-25","dow":"Friday","sessions":[{"id":"w31-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2026-12-26","dow":"Saturday","sessions":[{"id":"w31-sat","sport":"run","type":"threshold","name":"Threshold Intervals \u2014 4\u00d71.5km @ T-pace","dist":9.5,"dur":null,"hr":"158\u2013172 bpm","pace":"5:30\u20135:50/km (threshold)","zone":"Zone 4","desc":"Norwegian-inspired threshold work. These intervals sit at your lactate threshold \u2014 the pace you could sustain for ~1 hour. Research confirms this is w"}]},{"date":"2026-12-27","dow":"Sunday","sessions":[{"id":"w31-sun-long","sport":"run","type":"long","name":"Long Run \u2014 20km","dist":20,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:40/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":32,"phase":"Half Marathon Build","focus":"HM-specific fitness","start":"2026-12-28","end":"2027-01-03","recovery":false,"days":[{"date":"2026-12-28","dow":"Monday","sessions":[]},{"date":"2026-12-29","dow":"Tuesday","sessions":[{"id":"w32-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 7km","dist":7,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:45/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2026-12-30","dow":"Wednesday","sessions":[{"id":"w32-wed-str","sport":"strength","type":"strength","name":"Race-Power Plyometric Circuit B \u2014 Hip Flexor Power","dist":null,"dur":30,"hr":"","pace":"","zone":"Strength","desc":"Hip flexor power and calf explosiveness determine your top-end pace in the half marathon. Split jumps replicate the single-leg push-off of running at "}]},{"date":"2026-12-31","dow":"Thursday","sessions":[{"id":"w32-thu-str","sport":"strength","type":"strength","name":"Race-Power Plyometric Circuit A \u2014 Running Economy","dist":null,"dur":30,"hr":"","pace":"","zone":"Strength","desc":"Plyometrics at this phase directly improve running economy. Saunders et al.: 6 weeks of plyometric training improved economy in middle and long-distan"}]},{"date":"2027-01-01","dow":"Friday","sessions":[{"id":"w32-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2027-01-02","dow":"Saturday","sessions":[{"id":"w32-sat","sport":"run","type":"race_pace","name":"Half Marathon Race Pace Run \u2014 11km","dist":11,"dur":null,"hr":"150\u2013163 bpm","pace":"6:10\u20136:30/km (HM goal pace)","zone":"Zone 3","desc":"Race pace simulation. Based on your 5k of 28:43 (VDOT ~33), projected HM pace is 6:10\u20136:30/km for a first HM finish. This session teaches your body an"}]},{"date":"2027-01-03","dow":"Sunday","sessions":[{"id":"w32-sun-long","sport":"run","type":"long","name":"Long Run \u2014 21km","dist":21,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:40/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":33,"phase":"Half Marathon Build","focus":"HM-specific fitness","start":"2027-01-04","end":"2027-01-10","recovery":false,"days":[{"date":"2027-01-04","dow":"Monday","sessions":[]},{"date":"2027-01-05","dow":"Tuesday","sessions":[{"id":"w33-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 6km","dist":6,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:45/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2027-01-06","dow":"Wednesday","sessions":[{"id":"w33-wed-str","sport":"strength","type":"strength","name":"Race-Power Plyometric Circuit B \u2014 Hip Flexor Power","dist":null,"dur":30,"hr":"","pace":"","zone":"Strength","desc":"Hip flexor power and calf explosiveness determine your top-end pace in the half marathon. Split jumps replicate the single-leg push-off of running at "}]},{"date":"2027-01-07","dow":"Thursday","sessions":[{"id":"w33-thu-str","sport":"strength","type":"strength","name":"Race-Power Plyometric Circuit A \u2014 Running Economy","dist":null,"dur":30,"hr":"","pace":"","zone":"Strength","desc":"Plyometrics at this phase directly improve running economy. Saunders et al.: 6 weeks of plyometric training improved economy in middle and long-distan"}]},{"date":"2027-01-08","dow":"Friday","sessions":[{"id":"w33-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2027-01-09","dow":"Saturday","sessions":[{"id":"w33-sat","sport":"run","type":"progression","name":"Progression Run \u2014 9km","dist":9,"dur":null,"hr":"131\u2192165 bpm building","pace":"6:45\u21925:45/km progressive","zone":"Zone 2\u21924","desc":"Start easy, finish strong. This builds mental and physical resilience. The Ingebrigtsen brothers and Kipchoge both use progression runs as staple qual"}]},{"date":"2027-01-10","dow":"Sunday","sessions":[{"id":"w33-sun-long","sport":"run","type":"long","name":"Long Run \u2014 18km","dist":18,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:40/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":34,"phase":"Half Marathon Build","focus":"HM-specific fitness","start":"2027-01-11","end":"2027-01-17","recovery":false,"days":[{"date":"2027-01-11","dow":"Monday","sessions":[]},{"date":"2027-01-12","dow":"Tuesday","sessions":[{"id":"w34-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 7km","dist":7,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:45/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2027-01-13","dow":"Wednesday","sessions":[{"id":"w34-wed-str","sport":"strength","type":"strength","name":"Race-Power Plyometric Circuit B \u2014 Hip Flexor Power","dist":null,"dur":30,"hr":"","pace":"","zone":"Strength","desc":"Hip flexor power and calf explosiveness determine your top-end pace in the half marathon. Split jumps replicate the single-leg push-off of running at "}]},{"date":"2027-01-14","dow":"Thursday","sessions":[{"id":"w34-thu-str","sport":"strength","type":"strength","name":"Race-Power Plyometric Circuit A \u2014 Running Economy","dist":null,"dur":30,"hr":"","pace":"","zone":"Strength","desc":"Plyometrics at this phase directly improve running economy. Saunders et al.: 6 weeks of plyometric training improved economy in middle and long-distan"}]},{"date":"2027-01-15","dow":"Friday","sessions":[{"id":"w34-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2027-01-16","dow":"Saturday","sessions":[{"id":"w34-sat","sport":"run","type":"vo2max","name":"VO2max Intervals \u2014 4\u00d71.0km","dist":7.5,"dur":null,"hr":"172\u2013185 bpm","pace":"5:00\u20135:20/km","zone":"Zone 5","desc":"VO2max work. These are hard \u2014 genuinely hard. But they are the sessions that expand your aerobic ceiling and unlock new paces. Used sparingly, 1\u00d7 per "}]},{"date":"2027-01-17","dow":"Sunday","sessions":[{"id":"w34-sun-long","sport":"run","type":"long","name":"Long Run \u2014 22km","dist":22,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:40/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":35,"phase":"Half Marathon Build","focus":"HM-specific fitness","start":"2027-01-18","end":"2027-01-24","recovery":false,"days":[{"date":"2027-01-18","dow":"Monday","sessions":[]},{"date":"2027-01-19","dow":"Tuesday","sessions":[{"id":"w35-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 7km","dist":7,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:45/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2027-01-20","dow":"Wednesday","sessions":[{"id":"w35-wed-str","sport":"strength","type":"strength","name":"Race-Power Plyometric Circuit B \u2014 Hip Flexor Power","dist":null,"dur":30,"hr":"","pace":"","zone":"Strength","desc":"Hip flexor power and calf explosiveness determine your top-end pace in the half marathon. Split jumps replicate the single-leg push-off of running at "}]},{"date":"2027-01-21","dow":"Thursday","sessions":[{"id":"w35-thu-str","sport":"strength","type":"strength","name":"Race-Power Plyometric Circuit A \u2014 Running Economy","dist":null,"dur":30,"hr":"","pace":"","zone":"Strength","desc":"Plyometrics at this phase directly improve running economy. Saunders et al.: 6 weeks of plyometric training improved economy in middle and long-distan"}]},{"date":"2027-01-22","dow":"Friday","sessions":[{"id":"w35-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2027-01-23","dow":"Saturday","sessions":[{"id":"w35-sat","sport":"run","type":"threshold","name":"Threshold Intervals \u2014 5\u00d71.5km @ T-pace","dist":11.0,"dur":null,"hr":"158\u2013172 bpm","pace":"5:30\u20135:50/km (threshold)","zone":"Zone 4","desc":"Norwegian-inspired threshold work. These intervals sit at your lactate threshold \u2014 the pace you could sustain for ~1 hour. Research confirms this is w"}]},{"date":"2027-01-24","dow":"Sunday","sessions":[{"id":"w35-sun-long","sport":"run","type":"long","name":"Long Run \u2014 20km","dist":20,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:40/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":36,"phase":"Half Marathon Build","focus":"Deload","start":"2027-01-25","end":"2027-01-31","recovery":true,"days":[{"date":"2027-01-25","dow":"Monday","sessions":[]},{"date":"2027-01-26","dow":"Tuesday","sessions":[{"id":"w36-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 5km","dist":5,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:45/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2027-01-27","dow":"Wednesday","sessions":[{"id":"w36-wed-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2027-01-28","dow":"Thursday","sessions":[{"id":"w36-thu-str","sport":"strength","type":"strength","name":"Race-Power Plyometric Circuit A \u2014 Running Economy","dist":null,"dur":30,"hr":"","pace":"","zone":"Strength","desc":"Plyometrics at this phase directly improve running economy. Saunders et al.: 6 weeks of plyometric training improved economy in middle and long-distan"}]},{"date":"2027-01-29","dow":"Friday","sessions":[{"id":"w36-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2027-01-30","dow":"Saturday","sessions":[{"id":"w36-sat","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 6km","dist":6,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:45/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2027-01-31","dow":"Sunday","sessions":[{"id":"w36-sun-long","sport":"run","type":"long","name":"Long Run \u2014 17km","dist":17,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:40/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":37,"phase":"Half Marathon Build","focus":"HM-specific fitness","start":"2027-02-01","end":"2027-02-07","recovery":false,"days":[{"date":"2027-02-01","dow":"Monday","sessions":[]},{"date":"2027-02-02","dow":"Tuesday","sessions":[{"id":"w37-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 7km","dist":7,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:45/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2027-02-03","dow":"Wednesday","sessions":[{"id":"w37-wed-str","sport":"strength","type":"strength","name":"Race-Power Plyometric Circuit B \u2014 Hip Flexor Power","dist":null,"dur":30,"hr":"","pace":"","zone":"Strength","desc":"Hip flexor power and calf explosiveness determine your top-end pace in the half marathon. Split jumps replicate the single-leg push-off of running at "}]},{"date":"2027-02-04","dow":"Thursday","sessions":[{"id":"w37-thu-str","sport":"strength","type":"strength","name":"Race-Power Plyometric Circuit A \u2014 Running Economy","dist":null,"dur":30,"hr":"","pace":"","zone":"Strength","desc":"Plyometrics at this phase directly improve running economy. Saunders et al.: 6 weeks of plyometric training improved economy in middle and long-distan"}]},{"date":"2027-02-05","dow":"Friday","sessions":[{"id":"w37-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2027-02-06","dow":"Saturday","sessions":[{"id":"w37-sat","sport":"run","type":"race_pace","name":"Half Marathon Race Pace Run \u2014 12km","dist":12,"dur":null,"hr":"150\u2013163 bpm","pace":"6:10\u20136:30/km (HM goal pace)","zone":"Zone 3","desc":"Race pace simulation. Based on your 5k of 28:43 (VDOT ~33), projected HM pace is 6:10\u20136:30/km for a first HM finish. This session teaches your body an"}]},{"date":"2027-02-07","dow":"Sunday","sessions":[{"id":"w37-sun-long","sport":"run","type":"long","name":"Long Run \u2014 23km","dist":23,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:40/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":38,"phase":"Half Marathon Build","focus":"HM-specific fitness","start":"2027-02-08","end":"2027-02-14","recovery":false,"days":[{"date":"2027-02-08","dow":"Monday","sessions":[]},{"date":"2027-02-09","dow":"Tuesday","sessions":[{"id":"w38-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 7km","dist":7,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:45/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2027-02-10","dow":"Wednesday","sessions":[{"id":"w38-wed-str","sport":"strength","type":"strength","name":"Race-Power Plyometric Circuit B \u2014 Hip Flexor Power","dist":null,"dur":30,"hr":"","pace":"","zone":"Strength","desc":"Hip flexor power and calf explosiveness determine your top-end pace in the half marathon. Split jumps replicate the single-leg push-off of running at "}]},{"date":"2027-02-11","dow":"Thursday","sessions":[{"id":"w38-thu-str","sport":"strength","type":"strength","name":"Race-Power Plyometric Circuit A \u2014 Running Economy","dist":null,"dur":30,"hr":"","pace":"","zone":"Strength","desc":"Plyometrics at this phase directly improve running economy. Saunders et al.: 6 weeks of plyometric training improved economy in middle and long-distan"}]},{"date":"2027-02-12","dow":"Friday","sessions":[{"id":"w38-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2027-02-13","dow":"Saturday","sessions":[{"id":"w38-sat","sport":"run","type":"progression","name":"Progression Run \u2014 10km","dist":10,"dur":null,"hr":"131\u2192165 bpm building","pace":"6:45\u21925:45/km progressive","zone":"Zone 2\u21924","desc":"Start easy, finish strong. This builds mental and physical resilience. The Ingebrigtsen brothers and Kipchoge both use progression runs as staple qual"}]},{"date":"2027-02-14","dow":"Sunday","sessions":[{"id":"w38-sun-long","sport":"run","type":"long","name":"Long Run \u2014 21km","dist":21,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:40/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":39,"phase":"Half Marathon Build","focus":"HM-specific fitness","start":"2027-02-15","end":"2027-02-21","recovery":false,"days":[{"date":"2027-02-15","dow":"Monday","sessions":[]},{"date":"2027-02-16","dow":"Tuesday","sessions":[{"id":"w39-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 6km","dist":6,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:45/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2027-02-17","dow":"Wednesday","sessions":[{"id":"w39-wed-str","sport":"strength","type":"strength","name":"Race-Power Plyometric Circuit B \u2014 Hip Flexor Power","dist":null,"dur":30,"hr":"","pace":"","zone":"Strength","desc":"Hip flexor power and calf explosiveness determine your top-end pace in the half marathon. Split jumps replicate the single-leg push-off of running at "}]},{"date":"2027-02-18","dow":"Thursday","sessions":[{"id":"w39-thu-str","sport":"strength","type":"strength","name":"Race-Power Plyometric Circuit A \u2014 Running Economy","dist":null,"dur":30,"hr":"","pace":"","zone":"Strength","desc":"Plyometrics at this phase directly improve running economy. Saunders et al.: 6 weeks of plyometric training improved economy in middle and long-distan"}]},{"date":"2027-02-19","dow":"Friday","sessions":[{"id":"w39-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2027-02-20","dow":"Saturday","sessions":[{"id":"w39-sat","sport":"run","type":"threshold","name":"Threshold Intervals \u2014 5\u00d71.5km @ T-pace","dist":11.0,"dur":null,"hr":"158\u2013172 bpm","pace":"5:30\u20135:50/km (threshold)","zone":"Zone 4","desc":"Norwegian-inspired threshold work. These intervals sit at your lactate threshold \u2014 the pace you could sustain for ~1 hour. Research confirms this is w"}]},{"date":"2027-02-21","dow":"Sunday","sessions":[{"id":"w39-sun-long","sport":"run","type":"long","name":"Long Run \u2014 19km","dist":19,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:40/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":40,"phase":"Half Marathon Build","focus":"HM-specific fitness","start":"2027-02-22","end":"2027-02-28","recovery":false,"days":[{"date":"2027-02-22","dow":"Monday","sessions":[]},{"date":"2027-02-23","dow":"Tuesday","sessions":[{"id":"w40-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 8km","dist":8,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:45/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2027-02-24","dow":"Wednesday","sessions":[{"id":"w40-wed-str","sport":"strength","type":"strength","name":"Race-Power Plyometric Circuit B \u2014 Hip Flexor Power","dist":null,"dur":30,"hr":"","pace":"","zone":"Strength","desc":"Hip flexor power and calf explosiveness determine your top-end pace in the half marathon. Split jumps replicate the single-leg push-off of running at "}]},{"date":"2027-02-25","dow":"Thursday","sessions":[{"id":"w40-thu-str","sport":"strength","type":"strength","name":"Race-Power Plyometric Circuit A \u2014 Running Economy","dist":null,"dur":30,"hr":"","pace":"","zone":"Strength","desc":"Plyometrics at this phase directly improve running economy. Saunders et al.: 6 weeks of plyometric training improved economy in middle and long-distan"}]},{"date":"2027-02-26","dow":"Friday","sessions":[{"id":"w40-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2027-02-27","dow":"Saturday","sessions":[{"id":"w40-sat","sport":"run","type":"race_pace","name":"Half Marathon Race Pace Run \u2014 13km","dist":13,"dur":null,"hr":"150\u2013163 bpm","pace":"6:10\u20136:30/km (HM goal pace)","zone":"Zone 3","desc":"Race pace simulation. Based on your 5k of 28:43 (VDOT ~33), projected HM pace is 6:10\u20136:30/km for a first HM finish. This session teaches your body an"}]},{"date":"2027-02-28","dow":"Sunday","sessions":[{"id":"w40-sun-long","sport":"run","type":"long","name":"Long Run \u2014 24km","dist":24,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:40/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":41,"phase":"Half Marathon Build","focus":"HM-specific fitness","start":"2027-03-01","end":"2027-03-07","recovery":false,"days":[{"date":"2027-03-01","dow":"Monday","sessions":[]},{"date":"2027-03-02","dow":"Tuesday","sessions":[{"id":"w41-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 7km","dist":7,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:45/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2027-03-03","dow":"Wednesday","sessions":[{"id":"w41-wed-str","sport":"strength","type":"strength","name":"Race-Power Plyometric Circuit B \u2014 Hip Flexor Power","dist":null,"dur":30,"hr":"","pace":"","zone":"Strength","desc":"Hip flexor power and calf explosiveness determine your top-end pace in the half marathon. Split jumps replicate the single-leg push-off of running at "}]},{"date":"2027-03-04","dow":"Thursday","sessions":[{"id":"w41-thu-str","sport":"strength","type":"strength","name":"Race-Power Plyometric Circuit A \u2014 Running Economy","dist":null,"dur":30,"hr":"","pace":"","zone":"Strength","desc":"Plyometrics at this phase directly improve running economy. Saunders et al.: 6 weeks of plyometric training improved economy in middle and long-distan"}]},{"date":"2027-03-05","dow":"Friday","sessions":[{"id":"w41-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2027-03-06","dow":"Saturday","sessions":[{"id":"w41-sat","sport":"run","type":"progression","name":"Progression Run \u2014 11km","dist":11,"dur":null,"hr":"131\u2192165 bpm building","pace":"6:45\u21925:45/km progressive","zone":"Zone 2\u21924","desc":"Start easy, finish strong. This builds mental and physical resilience. The Ingebrigtsen brothers and Kipchoge both use progression runs as staple qual"}]},{"date":"2027-03-07","dow":"Sunday","sessions":[{"id":"w41-sun-long","sport":"run","type":"long","name":"Long Run \u2014 22km","dist":22,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:40/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":42,"phase":"Half Marathon Build","focus":"Deload","start":"2027-03-08","end":"2027-03-14","recovery":true,"days":[{"date":"2027-03-08","dow":"Monday","sessions":[]},{"date":"2027-03-09","dow":"Tuesday","sessions":[{"id":"w42-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 5km","dist":5,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:45/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2027-03-10","dow":"Wednesday","sessions":[{"id":"w42-wed-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2027-03-11","dow":"Thursday","sessions":[{"id":"w42-thu-str","sport":"strength","type":"strength","name":"Race-Power Plyometric Circuit A \u2014 Running Economy","dist":null,"dur":30,"hr":"","pace":"","zone":"Strength","desc":"Plyometrics at this phase directly improve running economy. Saunders et al.: 6 weeks of plyometric training improved economy in middle and long-distan"}]},{"date":"2027-03-12","dow":"Friday","sessions":[{"id":"w42-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2027-03-13","dow":"Saturday","sessions":[{"id":"w42-sat","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 6km","dist":6,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:45/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2027-03-14","dow":"Sunday","sessions":[{"id":"w42-sun-long","sport":"run","type":"long","name":"Long Run \u2014 18km","dist":18,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:40/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":43,"phase":"Taper","focus":"Final long run","start":"2027-03-15","end":"2027-03-21","recovery":false,"days":[{"date":"2027-03-15","dow":"Monday","sessions":[]},{"date":"2027-03-16","dow":"Tuesday","sessions":[{"id":"w43-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 5km","dist":5,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:45/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2027-03-17","dow":"Wednesday","sessions":[{"id":"w43-wed-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2027-03-18","dow":"Thursday","sessions":[{"id":"w43-thu-str","sport":"strength","type":"activation","name":"Maintenance Activation","dist":null,"dur":15,"hr":"","pace":"","zone":"Activation","desc":"Taper phase only. 2 sets. Stay sharp, not fatigued. If anything feels heavy \u2014 skip it. Your fitness is locked in. The goal is to feel fresh on race da"}]},{"date":"2027-03-19","dow":"Friday","sessions":[{"id":"w43-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2027-03-20","dow":"Saturday","sessions":[{"id":"w43-sat","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 9km","dist":9,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:45/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2027-03-21","dow":"Sunday","sessions":[{"id":"w43-sun-long","sport":"run","type":"long","name":"Long Run \u2014 20km","dist":20,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:40/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":44,"phase":"Taper","focus":"Begin taper","start":"2027-03-22","end":"2027-03-28","recovery":false,"days":[{"date":"2027-03-22","dow":"Monday","sessions":[]},{"date":"2027-03-23","dow":"Tuesday","sessions":[{"id":"w44-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 4km","dist":4,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:45/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2027-03-24","dow":"Wednesday","sessions":[{"id":"w44-wed-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2027-03-25","dow":"Thursday","sessions":[{"id":"w44-thu-str","sport":"strength","type":"activation","name":"Maintenance Activation","dist":null,"dur":15,"hr":"","pace":"","zone":"Activation","desc":"Taper phase only. 2 sets. Stay sharp, not fatigued. If anything feels heavy \u2014 skip it. Your fitness is locked in. The goal is to feel fresh on race da"}]},{"date":"2027-03-26","dow":"Friday","sessions":[{"id":"w44-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2027-03-27","dow":"Saturday","sessions":[{"id":"w44-sat","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 8km","dist":8,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:45/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2027-03-28","dow":"Sunday","sessions":[{"id":"w44-sun-long","sport":"run","type":"long","name":"Long Run \u2014 17km","dist":17,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:40/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":45,"phase":"Taper","focus":"Reduce volume","start":"2027-03-29","end":"2027-04-04","recovery":false,"days":[{"date":"2027-03-29","dow":"Monday","sessions":[]},{"date":"2027-03-30","dow":"Tuesday","sessions":[{"id":"w45-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 3km","dist":3,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:45/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2027-03-31","dow":"Wednesday","sessions":[{"id":"w45-wed-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2027-04-01","dow":"Thursday","sessions":[{"id":"w45-thu-str","sport":"strength","type":"activation","name":"Maintenance Activation","dist":null,"dur":15,"hr":"","pace":"","zone":"Activation","desc":"Taper phase only. 2 sets. Stay sharp, not fatigued. If anything feels heavy \u2014 skip it. Your fitness is locked in. The goal is to feel fresh on race da"}]},{"date":"2027-04-02","dow":"Friday","sessions":[{"id":"w45-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2027-04-03","dow":"Saturday","sessions":[{"id":"w45-sat","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 7km","dist":7,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:45/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2027-04-04","dow":"Sunday","sessions":[{"id":"w45-sun-long","sport":"run","type":"long","name":"Long Run \u2014 15km","dist":15,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:40/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":46,"phase":"Taper","focus":"Sharpening","start":"2027-04-05","end":"2027-04-11","recovery":false,"days":[{"date":"2027-04-05","dow":"Monday","sessions":[]},{"date":"2027-04-06","dow":"Tuesday","sessions":[{"id":"w46-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 3km","dist":3,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:45/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2027-04-07","dow":"Wednesday","sessions":[{"id":"w46-wed-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2027-04-08","dow":"Thursday","sessions":[{"id":"w46-thu-str","sport":"strength","type":"activation","name":"Maintenance Activation","dist":null,"dur":15,"hr":"","pace":"","zone":"Activation","desc":"Taper phase only. 2 sets. Stay sharp, not fatigued. If anything feels heavy \u2014 skip it. Your fitness is locked in. The goal is to feel fresh on race da"}]},{"date":"2027-04-09","dow":"Friday","sessions":[{"id":"w46-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2027-04-10","dow":"Saturday","sessions":[{"id":"w46-sat","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 6km","dist":6,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:45/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2027-04-11","dow":"Sunday","sessions":[{"id":"w46-sun-long","sport":"run","type":"long","name":"Long Run \u2014 13km","dist":13,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:40/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":47,"phase":"Taper","focus":"Race sharpness","start":"2027-04-12","end":"2027-04-18","recovery":false,"days":[{"date":"2027-04-12","dow":"Monday","sessions":[]},{"date":"2027-04-13","dow":"Tuesday","sessions":[{"id":"w47-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 3km","dist":3,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:45/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2027-04-14","dow":"Wednesday","sessions":[{"id":"w47-wed-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2027-04-15","dow":"Thursday","sessions":[{"id":"w47-thu-str","sport":"strength","type":"activation","name":"Maintenance Activation","dist":null,"dur":15,"hr":"","pace":"","zone":"Activation","desc":"Taper phase only. 2 sets. Stay sharp, not fatigued. If anything feels heavy \u2014 skip it. Your fitness is locked in. The goal is to feel fresh on race da"}]},{"date":"2027-04-16","dow":"Friday","sessions":[{"id":"w47-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2027-04-17","dow":"Saturday","sessions":[{"id":"w47-sat","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 5km","dist":5,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:45/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2027-04-18","dow":"Sunday","sessions":[{"id":"w47-sun-long","sport":"run","type":"long","name":"Long Run \u2014 11km","dist":11,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:40/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":48,"phase":"Taper","focus":"Final quality","start":"2027-04-19","end":"2027-04-25","recovery":true,"days":[{"date":"2027-04-19","dow":"Monday","sessions":[]},{"date":"2027-04-20","dow":"Tuesday","sessions":[{"id":"w48-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 3km","dist":3,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:45/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2027-04-21","dow":"Wednesday","sessions":[{"id":"w48-wed-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2027-04-22","dow":"Thursday","sessions":[{"id":"w48-thu-str","sport":"strength","type":"activation","name":"Maintenance Activation","dist":null,"dur":15,"hr":"","pace":"","zone":"Activation","desc":"Taper phase only. 2 sets. Stay sharp, not fatigued. If anything feels heavy \u2014 skip it. Your fitness is locked in. The goal is to feel fresh on race da"}]},{"date":"2027-04-23","dow":"Friday","sessions":[{"id":"w48-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2027-04-24","dow":"Saturday","sessions":[{"id":"w48-sat","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 5km","dist":5,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:45/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2027-04-25","dow":"Sunday","sessions":[{"id":"w48-sun-long","sport":"run","type":"long","name":"Long Run \u2014 9km","dist":9,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:40/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":49,"phase":"Taper","focus":"Race week -2","start":"2027-04-26","end":"2027-05-02","recovery":true,"days":[{"date":"2027-04-26","dow":"Monday","sessions":[]},{"date":"2027-04-27","dow":"Tuesday","sessions":[{"id":"w49-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 3km","dist":3,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:45/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2027-04-28","dow":"Wednesday","sessions":[{"id":"w49-wed-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2027-04-29","dow":"Thursday","sessions":[{"id":"w49-thu-str","sport":"strength","type":"activation","name":"Maintenance Activation","dist":null,"dur":15,"hr":"","pace":"","zone":"Activation","desc":"Taper phase only. 2 sets. Stay sharp, not fatigued. If anything feels heavy \u2014 skip it. Your fitness is locked in. The goal is to feel fresh on race da"}]},{"date":"2027-04-30","dow":"Friday","sessions":[{"id":"w49-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2027-05-01","dow":"Saturday","sessions":[{"id":"w49-sat","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 4km","dist":4,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:45/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2027-05-02","dow":"Sunday","sessions":[{"id":"w49-sun-long","sport":"run","type":"long","name":"Long Run \u2014 8km","dist":8,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:40/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":50,"phase":"Taper","focus":"Race week -1 prep","start":"2027-05-03","end":"2027-05-09","recovery":true,"days":[{"date":"2027-05-03","dow":"Monday","sessions":[]},{"date":"2027-05-04","dow":"Tuesday","sessions":[{"id":"w50-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 3km","dist":3,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:45/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2027-05-05","dow":"Wednesday","sessions":[{"id":"w50-wed-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2027-05-06","dow":"Thursday","sessions":[{"id":"w50-thu-str","sport":"strength","type":"activation","name":"Maintenance Activation","dist":null,"dur":15,"hr":"","pace":"","zone":"Activation","desc":"Taper phase only. 2 sets. Stay sharp, not fatigued. If anything feels heavy \u2014 skip it. Your fitness is locked in. The goal is to feel fresh on race da"}]},{"date":"2027-05-07","dow":"Friday","sessions":[{"id":"w50-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2027-05-08","dow":"Saturday","sessions":[{"id":"w50-sat","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 4km","dist":4,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:45/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2027-05-09","dow":"Sunday","sessions":[{"id":"w50-sun-long","sport":"run","type":"long","name":"Long Run \u2014 7km","dist":7,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:40/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":51,"phase":"Taper","focus":"Race week \u2014 stay fresh","start":"2027-05-10","end":"2027-05-16","recovery":true,"days":[{"date":"2027-05-10","dow":"Monday","sessions":[]},{"date":"2027-05-11","dow":"Tuesday","sessions":[{"id":"w51-tue-opt","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 3km","dist":3,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:45/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2027-05-12","dow":"Wednesday","sessions":[{"id":"w51-wed-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2027-05-13","dow":"Thursday","sessions":[{"id":"w51-thu-str","sport":"strength","type":"activation","name":"Maintenance Activation","dist":null,"dur":15,"hr":"","pace":"","zone":"Activation","desc":"Taper phase only. 2 sets. Stay sharp, not fatigued. If anything feels heavy \u2014 skip it. Your fitness is locked in. The goal is to feel fresh on race da"}]},{"date":"2027-05-14","dow":"Friday","sessions":[{"id":"w51-fri-mob","sport":"strength","type":"recovery","name":"Mobility & Recovery Flow","dist":null,"dur":15,"hr":"","pace":"","zone":"Recovery","desc":"Active recovery. Not optional. This is where the adaptation happens. 15 minutes prevents weeks of injury."}]},{"date":"2027-05-15","dow":"Saturday","sessions":[{"id":"w51-sat","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 3km","dist":3,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:45/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2027-05-16","dow":"Sunday","sessions":[{"id":"w51-sun-long","sport":"run","type":"long","name":"Long Run \u2014 5km","dist":5,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:40/km","zone":"Zone 2","desc":"The cornerstone of your week. Every great half-marathoner is built on consistent long runs. Go slow \u2014 the adaptation is in the aerobic stress, not the"}]}]},{"wn":52,"phase":"Race Week","focus":"RACE DAY \ud83c\udfc5","start":"2027-05-17","end":"2027-05-23","recovery":true,"days":[{"date":"2027-05-17","dow":"Monday","sessions":[]},{"date":"2027-05-18","dow":"Tuesday","sessions":[]},{"date":"2027-05-19","dow":"Wednesday","sessions":[]},{"date":"2027-05-20","dow":"Thursday","sessions":[]},{"date":"2027-05-21","dow":"Friday","sessions":[]},{"date":"2027-05-22","dow":"Saturday","sessions":[{"id":"w52-sat-shakeout","sport":"run","type":"easy","name":"Easy Aerobic Run \u2014 3km","dist":3,"dur":null,"hr":"131\u2013145 bpm","pace":"6:00\u20136:45/km","zone":"Zone 2","desc":"Zone 2 aerobic run. This is the foundation of all elite training \u2014 Kipchoge runs 80%+ of his mileage at this effort. You should be able to hold a full"}]},{"date":"2027-05-23","dow":"Sunday","sessions":[{"id":"w52-sun-hm","sport":"run","type":"race","name":"HALF MARATHON RACE! \ud83c\udfc5","dist":21.1,"dur":null,"hr":"155\u2013172 bpm","pace":"6:10\u20136:30/km","zone":"Zone 3-4","desc":"This is it. 52 weeks of work. Trust your training. Run your race."}]}]}];
+
+// ── CONSTANTS ─────────────────────────────────────────────────────────────
+const RACE_DATE = new Date('2027-05-23');
+const TODAY = new Date(); TODAY.setHours(0,0,0,0);
+const TODAY_STR = TODAY.toISOString().split('T')[0];
+const STORAGE = 'rasti-runs-v1';
+const STRAVA_CLIENT_ID = '250493'; // Replace with real client ID
+
+// ── STATE ──────────────────────────────────────────────────────────────────
+let state = {
+  completed: {},
+  checkins: [],
+  stravaConnected: false,
+  stravaRuns: [],
+  activePhaseFilter: 'all',
+  selectedRpe: null,
+};
+
+function loadState() {
+  try {
+    const s = localStorage.getItem(STORAGE);
+    if (s) state = { ...state, ...JSON.parse(s) };
+  } catch(e) {}
+}
+function saveState() {
+  try { localStorage.setItem(STORAGE, JSON.stringify(state)); } catch(e) {}
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────
+function daysToRace() {
+  return Math.max(0, Math.ceil((RACE_DATE - TODAY) / 86400000));
+}
+function currentWeek() {
+  return PLAN.find(w => w.start <= TODAY_STR && w.end >= TODAY_STR) || PLAN[1];
+}
+function todaySessions() {
+  const w = currentWeek();
+  if (!w) return [];
+  const day = w.days.find(d => d.date === TODAY_STR);
+  return day ? day.sessions : [];
+}
+function totalWorkouts() {
+  return PLAN.reduce((s,w) => s + w.days.reduce((ss,d) => ss + d.sessions.length, 0), 0);
+}
+function completedCount() { return Object.values(state.completed).filter(Boolean).length; }
+function overallPct() { return Math.round(completedCount() / Math.max(totalWorkouts(),1) * 100); }
+function weekKm() {
+  const w = currentWeek();
+  if (!w) return 0;
+  return w.days.reduce((s,d) => s + d.sessions.reduce((ss,wo) => ss + (wo.dist||0), 0), 0);
+}
+function phaseClass(phase) {
+  if (phase.includes('10K')) return 'c2k';
+  if (phase.includes('Base')) return 'base';
+  if (phase.includes('Half')) return 'build';
+  return 'taper';
+}
+function sportColor(sport, type) {
+  if (sport === 'run') return 'var(--accent)';
+  if (type === 'recovery') return 'var(--teal)';
+  return 'var(--purple)';
+}
+function chipClass(sport, type) {
+  if (sport === 'run') return 'chip-run';
+  if (type === 'recovery') return 'chip-mobility';
+  return 'chip-strength';
+}
+function chipLabel(sport, type) {
+  if (sport === 'run') return 'RUN';
+  if (type === 'recovery') return 'MOBILITY';
+  if (type === 'activation') return 'ACTIVATION';
+  return 'STRENGTH';
+}
+function fmtDate(str) {
+  if (!str) return '';
+  const [y,m,d] = str.split('-').map(Number);
+  return new Date(y,m-1,d).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+}
+
+// ── SCREEN ROUTING ────────────────────────────────────────────────────────
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  document.getElementById('nav-'+name).classList.add('active');
+  if (name === 'home') renderHome();
+  if (name === 'plan') renderPlan();
+  if (name === 'stats') renderStats();
+}
+
+// ── HOME SCREEN ───────────────────────────────────────────────────────────
+function renderHome() {
+  const days = daysToRace();
+  const weeks = Math.floor(days / 7);
+  const remDays = days % 7;
+  const cw = currentWeek();
+  const sessions = todaySessions();
+  const pct = overallPct();
+
+  let sessionsHTML = sessions.length === 0
+    ? '<div class="session-row"><div class="session-dot rest"></div><div class="session-info"><div class="session-name">Rest Day</div><div class="session-meta">Recovery and adaptation</div></div></div>'
+    : sessions.map(s => `
+      <div class="session-row" onclick="openModal(${JSON.stringify(s).replace(/"/g,'&quot;')}, '${TODAY_STR}')">
+        <div class="session-dot ${s.sport}"></div>
+        <div class="session-info">
+          <div class="session-name">${s.name}</div>
+          <div class="session-meta">${s.dist ? s.dist+'km' : s.dur ? s.dur+' min' : ''} ${s.hr ? '· HR '+s.hr : ''}</div>
+        </div>
+        <span class="session-chip ${chipClass(s.sport,s.type)}">${chipLabel(s.sport,s.type)}</span>
+      </div>`).join('');
+
+  document.getElementById('screen-home').innerHTML = `
+    <div class="home-hero fade-up">
+      <div class="home-greeting">RASTI<br/><span>RUNS</span></div>
+      <div class="home-meta">${cw ? cw.phase+' · Week '+cw.wn : 'Pre-Plan'}</div>
+      <div class="race-countdown">
+        <div class="countdown-unit">
+          <div class="countdown-num">${Math.floor(days/7/4)}</div>
+          <div class="countdown-label">Months</div>
+        </div>
+        <div class="countdown-unit">
+          <div class="countdown-num">${weeks}</div>
+          <div class="countdown-label">Weeks</div>
+        </div>
+        <div class="countdown-unit">
+          <div class="countdown-num">${remDays}</div>
+          <div class="countdown-label">Days</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="today-card fade-up-2">
+      <div class="today-label">Today · ${fmtDate(TODAY_STR)}</div>
+      ${sessionsHTML}
+    </div>
+
+    <div class="week-progress fade-up-3">
+      <div class="progress-header">
+        <div class="progress-title">Overall Progress</div>
+        <div class="progress-pct">${pct}%</div>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" style="width:${pct}%"></div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-box">
+          <div class="stat-val">${completedCount()}</div>
+          <div class="stat-lbl">Done</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val">${weekKm().toFixed(0)}</div>
+          <div class="stat-lbl">Week km</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val">${days}</div>
+          <div class="stat-lbl">To race</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val">28:43</div>
+          <div class="stat-lbl">5k PB</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="strava-card fade-up-4">
+      <div class="strava-header">
+        <div class="strava-logo">S</div>
+        <div>
+          <div class="strava-title">Strava</div>
+          <div class="strava-sub">${state.stravaConnected ? 'Connected ✓' : 'Connect to see recent runs'}</div>
+        </div>
+      </div>
+      ${state.stravaConnected && state.stravaRuns.length > 0
+        ? state.stravaRuns.slice(0,3).map(r => `
+          <div class="recent-run">
+            <div class="run-name">${r.name}</div>
+            <div class="run-stats">
+              <span class="run-stat">${(r.distance/1000).toFixed(2)}km</span>
+              <span class="run-stat">${Math.floor(r.moving_time/60)}'${String(r.moving_time%60).padStart(2,'0')}"</span>
+              ${r.average_heartrate ? '<span class="run-stat">♥ '+Math.round(r.average_heartrate)+'</span>' : ''}
+            </div>
+          </div>`).join('')
+        : `<button class="btn-strava" onclick="connectStrava()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>
+            Connect with Strava
+          </button>`}
+    </div>`;
+}
+
+// ── PLAN SCREEN ───────────────────────────────────────────────────────────
+function renderPlan() {
+  const phases = ['all','Couch to 10K','Base Building','Half Marathon Build','Taper'];
+  const phaseLabels = {'all':'All','Couch to 10K':'C→10K','Base Building':'Base','Half Marathon Build':'HM Build','Taper':'Taper'};
+
+  const pillsHTML = phases.map(ph => {
+    const cls = ph === 'all' ? 'all' : phaseClass(ph);
+    const active = state.activePhaseFilter === ph ? 'active' : '';
+    return `<button class="phase-pill ${cls} ${active}" onclick="filterPhase('${ph}')">${phaseLabels[ph]}</button>`;
+  }).join('');
+
+  const filteredWeeks = PLAN.filter(w =>
+    state.activePhaseFilter === 'all' || w.phase === state.activePhaseFilter
+  );
+
+  const weeksHTML = filteredWeeks.map(w => {
+    const isCurrent = w.start <= TODAY_STR && w.end >= TODAY_STR;
+    const cls = phaseClass(w.phase);
+    const wLabel = w.wn === 0 ? 'W0' : 'W'+w.wn;
+    const doneCount = w.days.reduce((s,d) => s + d.sessions.filter(wo => state.completed[wo.id]).length, 0);
+    const totalCount = w.days.reduce((s,d) => s + d.sessions.length, 0);
+
+    const daysHTML = w.days.map(d => {
+      const isToday = d.date === TODAY_STR;
+      if (d.sessions.length === 0) return `
+        <div class="day-row">
+          <div class="day-name ${isToday?'today':''}">${d.dow.slice(0,3).toUpperCase()}</div>
+          <div class="day-sessions"><div class="session-tag" style="color:var(--text3)"><div class="tag-dot" style="background:var(--bg4)"></div>Rest</div></div>
+        </div>`;
+      return d.sessions.map(wo => `
+        <div class="day-row" onclick="openModal(${JSON.stringify(wo).replace(/"/g,'&quot;')}, '${d.date}')">
+          <div class="day-name ${isToday?'today':''}">${d.dow.slice(0,3).toUpperCase()}</div>
+          <div class="day-sessions">
+            <div class="session-tag">
+              <div class="tag-dot" style="background:${sportColor(wo.sport,wo.type)}"></div>
+              ${wo.name}
+            </div>
+            <div class="session-detail">${wo.dist?wo.dist+'km':''}${wo.dur?' '+wo.dur+'min':''}${wo.hr?' · HR '+wo.hr:''}</div>
+          </div>
+          <div class="done-check ${state.completed[wo.id]?'done':''}" onclick="event.stopPropagation();toggleDone('${wo.id}')">
+            ${state.completed[wo.id]?'✓':''}
+          </div>
+        </div>`).join('');
+    }).join('');
+
+    return `
+      <div class="week-card ${isCurrent?'current-week':''}" id="week-${w.wn}">
+        <div class="week-header" onclick="toggleWeek(${w.wn})">
+          <div class="week-num">${wLabel}</div>
+          <div class="week-phase-dot" style="background:var(--phase-${cls})"></div>
+          <div class="week-title">${w.focus}${w.recovery?' 🔄':''}</div>
+          <div class="week-dates">${w.start?.slice(5)} → ${w.end?.slice(5)}</div>
+          <div class="week-arrow" id="arrow-${w.wn}">▾</div>
+        </div>
+        <div class="week-body ${isCurrent?'open':''}" id="body-${w.wn}">
+          ${daysHTML}
+        </div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('screen-plan').innerHTML = `
+    <div class="screen-title">Training Plan</div>
+    <div class="phase-pills">${pillsHTML}</div>
+    <div id="weeks-container">${weeksHTML}</div>`;
+
+  // Scroll to current week
+  setTimeout(() => {
+    const cw = currentWeek();
+    if (cw) {
+      const el = document.getElementById('week-'+cw.wn);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, 100);
+}
+
+function toggleWeek(wn) {
+  const body = document.getElementById('body-'+wn);
+  const arrow = document.getElementById('arrow-'+wn);
+  body.classList.toggle('open');
+  arrow.classList.toggle('open');
+}
+
+function filterPhase(phase) {
+  state.activePhaseFilter = phase;
+  renderPlan();
+}
+
+// ── STATS SCREEN ──────────────────────────────────────────────────────────
+function renderStats() {
+  const totalKm = PLAN.reduce((s,w) => s + w.days.reduce((ss,d) => ss + d.sessions.reduce((sss,wo) => sss+(wo.dist||0), 0), 0), 0);
+  const doneKm = PLAN.reduce((s,w) => s + w.days.reduce((ss,d) => ss + d.sessions.reduce((sss,wo) => sss+(state.completed[wo.id]?wo.dist||0:0), 0), 0), 0);
+
+  const checkinsHTML = state.checkins.length === 0
+    ? '<div style="color:var(--text3);font-size:.85rem;text-align:center;padding:1rem">No check-ins yet. Submit your first one below!</div>'
+    : state.checkins.slice(-5).reverse().map(c => `
+      <div class="checkin-item">
+        <div class="checkin-date">${c.date}</div>
+        <div class="checkin-summary">${c.dist}km · ${c.time} · HR ${c.hr} · RPE ${c.rpe}/10${c.knee?' · Knee: '+c.knee:''}</div>
+      </div>`).join('');
+
+  const rpeButtons = [1,2,3,4,5,6,7,8,9,10].map(n =>
+    `<button class="rpe-btn ${state.selectedRpe===n?'selected':''}" onclick="selectRpe(${n})">${n}</button>`
+  ).join('');
+
+  document.getElementById('screen-stats').innerHTML = `
+    <div class="screen-title">Stats</div>
+
+    <div class="knee-alert">
+      <span>⚠️</span>
+      <span>Left knee — X-ray results pending. Stop any run if pain exceeds 2/10.</span>
+    </div>
+
+    <div class="stats-grid">
+      <div class="big-stat accent">
+        <div class="big-stat-val">${overallPct()}<span class="big-stat-unit">%</span></div>
+        <div class="big-stat-lbl">Plan complete</div>
+      </div>
+      <div class="big-stat">
+        <div class="big-stat-val">${daysToRace()}</div>
+        <div class="big-stat-lbl">Days to race</div>
+      </div>
+      <div class="big-stat">
+        <div class="big-stat-val">${Math.round(doneKm)}<span class="big-stat-unit">km</span></div>
+        <div class="big-stat-lbl">Completed</div>
+      </div>
+      <div class="big-stat">
+        <div class="big-stat-val">${Math.round(totalKm)}<span class="big-stat-unit">km</span></div>
+        <div class="big-stat-lbl">Total plan km</div>
+      </div>
+    </div>
+
+    <div class="checkin-card">
+      <div class="checkin-title">📬 Weekly Check-in</div>
+      <div class="checkin-field">
+        <div class="field-label">Run distance (km)</div>
+        <input class="field-input" id="ci-dist" type="number" step="0.1" placeholder="e.g. 5.2"/>
+      </div>
+      <div class="checkin-field">
+        <div class="field-label">Time (mm:ss)</div>
+        <input class="field-input" id="ci-time" type="text" placeholder="e.g. 28:30"/>
+      </div>
+      <div class="checkin-field">
+        <div class="field-label">Average HR (bpm)</div>
+        <input class="field-input" id="ci-hr" type="number" placeholder="e.g. 145"/>
+      </div>
+      <div class="checkin-field">
+        <div class="field-label">RPE (1=easy, 10=max)</div>
+        <div class="rpe-row">${rpeButtons}</div>
+      </div>
+      <div class="checkin-field">
+        <div class="field-label">Knee feedback</div>
+        <input class="field-input" id="ci-knee" type="text" placeholder="e.g. All good / slight ache"/>
+      </div>
+      <div class="checkin-field">
+        <div class="field-label">Notes</div>
+        <input class="field-input" id="ci-notes" type="text" placeholder="How did it feel?"/>
+      </div>
+      <button class="btn-submit" onclick="submitCheckin()">Save Check-in</button>
+    </div>
+
+    <div style="font-size:.85rem;font-weight:600;margin-bottom:.5rem;color:var(--text2)">Recent Check-ins</div>
+    ${checkinsHTML}`;
+}
+
+function selectRpe(n) {
+  state.selectedRpe = n;
+  renderStats();
+}
+
+function submitCheckin() {
+  const dist = document.getElementById('ci-dist').value;
+  const time = document.getElementById('ci-time').value;
+  const hr = document.getElementById('ci-hr').value;
+  const knee = document.getElementById('ci-knee').value;
+  const notes = document.getElementById('ci-notes').value;
+  if (!dist || !time) { alert('Please enter at least distance and time'); return; }
+  state.checkins.push({
+    date: new Date().toLocaleDateString('en-GB'),
+    dist, time, hr,
+    rpe: state.selectedRpe || '—',
+    knee, notes
+  });
+  state.selectedRpe = null;
+  saveState();
+  renderStats();
+}
+
+// ── MODAL ─────────────────────────────────────────────────────────────────
+function openModal(wo, dateStr) {
+  if (typeof wo === 'string') wo = JSON.parse(wo);
+  const sportLabel = wo.sport === 'run' ? 'RUN' : wo.type === 'recovery' ? 'MOBILITY' : 'STRENGTH';
+  const color = sportColor(wo.sport, wo.type);
+  const isDone = state.completed[wo.id];
+
+  document.getElementById('modal-content').innerHTML = `
+    <div class="modal-sport" style="color:${color}">${sportLabel}</div>
+    <div class="modal-title">${wo.name}</div>
+    <div class="modal-date">${fmtDate(dateStr)}</div>
+    <div class="modal-chips">
+      ${wo.dist ? '<span class="modal-chip">📍 '+wo.dist+'km</span>' : ''}
+      ${wo.dur ? '<span class="modal-chip">⏱ '+wo.dur+' min</span>' : ''}
+      ${wo.hr ? '<span class="modal-chip">❤️ '+wo.hr+'</span>' : ''}
+      ${wo.pace ? '<span class="modal-chip">🏃 '+wo.pace+'</span>' : ''}
+      ${wo.zone ? '<span class="modal-chip">📊 '+wo.zone+'</span>' : ''}
+    </div>
+    ${wo.desc ? '<div class="modal-desc">'+wo.desc+'</div>' : ''}
+    <button class="btn-done ${isDone?'marked':''}" onclick="toggleDone('${wo.id}');updateModalBtn('${wo.id}')">
+      ${isDone ? '✓ Marked complete' : 'Mark as complete'}
+    </button>`;
+
+  document.getElementById('modal').classList.add('open');
+}
+
+function updateModalBtn(id) {
+  const btn = document.querySelector('.btn-done');
+  if (!btn) return;
+  const done = state.completed[id];
+  btn.className = `btn-done ${done?'marked':''}`;
+  btn.textContent = done ? '✓ Marked complete' : 'Mark as complete';
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modal')) {
+    document.getElementById('modal').classList.remove('open');
+  }
+}
+
+function toggleDone(id) {
+  state.completed[id] = !state.completed[id];
+  if (!state.completed[id]) delete state.completed[id];
+  saveState();
+}
+
+// ── STRAVA ────────────────────────────────────────────────────────────────
+// ── STRAVA OAUTH ─────────────────────────────────────────────────────────
+async function connectStrava() {
+  const redirectUri = window.location.origin + window.location.pathname;
+  const scope = 'read,activity:read_all';
+  window.location.href = `https://www.strava.com/oauth/authorize?client_id=${STRAVA_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${scope}&approval_prompt=auto`;
+}
+
+async function handleStravaCallback() {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  const error = params.get('error');
+
+  if (error) {
+    alert('Strava connection cancelled.');
+    window.history.replaceState({}, '', window.location.pathname);
+    return;
+  }
+
+  if (!code) return;
+
+  // Exchange code for token via Netlify function
+  try {
+    const resp = await fetch('/.netlify/functions/strava-auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, grant_type: 'authorization_code' }),
+    });
+    const data = await resp.json();
+
+    if (data.access_token) {
+      state.stravaConnected = true;
+      state.stravaToken = data.access_token;
+      state.stravaRefreshToken = data.refresh_token;
+      state.stravaExpiresAt = data.expires_at;
+      if (data.athlete) {
+        state.stravaAthlete = data.athlete;
+      }
+      saveState();
+      await fetchStravaActivities();
+      window.history.replaceState({}, '', window.location.pathname);
+      renderHome();
+    } else {
+      console.error('Strava auth failed:', data);
+    }
+  } catch (err) {
+    console.error('Strava auth error:', err);
+  }
+}
+
+async function refreshStravaToken() {
+  if (!state.stravaRefreshToken) return false;
+  if (state.stravaExpiresAt && Date.now() / 1000 < state.stravaExpiresAt - 300) return true;
+
+  try {
+    const resp = await fetch('/.netlify/functions/strava-auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: state.stravaRefreshToken, grant_type: 'refresh_token' }),
+    });
+    const data = await resp.json();
+    if (data.access_token) {
+      state.stravaToken = data.access_token;
+      state.stravaExpiresAt = data.expires_at;
+      saveState();
+      return true;
+    }
+  } catch (err) {}
+  return false;
+}
+
+async function fetchStravaActivities() {
+  const valid = await refreshStravaToken();
+  if (!valid || !state.stravaToken) return;
+
+  try {
+    const resp = await fetch(`/.netlify/functions/strava-activities?token=${state.stravaToken}`);
+    const acts = await resp.json();
+    if (Array.isArray(acts)) {
+      state.stravaRuns = acts.filter(a => a.type === 'Run' || a.sport_type === 'Run');
+      saveState();
+    }
+  } catch (err) {}
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+loadState();
+
+// Handle Strava OAuth callback on page load
+if (window.location.search.includes('code=')) {
+  handleStravaCallback();
+}
+
+// Refresh Strava data if connected
+if (state.stravaConnected && state.stravaToken) {
+  fetchStravaActivities().then(() => renderHome());
+}
+
+setTimeout(() => {
+  document.getElementById('loadingScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  renderHome();
+}, 1300);
+
+// Service worker registration
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
