@@ -965,6 +965,67 @@ body::before {
 .garmin-section { font-size: .68rem; font-weight: 700; text-transform: uppercase;
   letter-spacing: .1em; color: var(--text3); margin: 1rem 0 .5rem; }
 
+
+/* ── SHARE SCREEN ── */
+.share-toggle-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: .85rem 1rem; background: var(--bg2); border-radius: 12px;
+  border: 1px solid var(--border); margin-bottom: .4rem; cursor: pointer;
+  transition: all .15s;
+}
+.share-toggle-row:hover { background: var(--bg3); }
+.share-toggle-info { flex: 1; }
+.share-toggle-label { font-size: .9rem; font-weight: 500; }
+.share-toggle-desc { font-size: .72rem; color: var(--text3); margin-top: 2px; }
+.toggle-switch {
+  width: 44px; height: 24px; border-radius: 12px; background: var(--bg4);
+  border: 1px solid var(--border2); position: relative; flex-shrink: 0;
+  transition: background .2s; cursor: pointer;
+}
+.toggle-switch.on { background: var(--accent); border-color: var(--accent); }
+.toggle-knob {
+  width: 18px; height: 18px; border-radius: 50%; background: #fff;
+  position: absolute; top: 2px; left: 2px;
+  transition: transform .2s; box-shadow: 0 1px 3px rgba(0,0,0,.3);
+}
+.toggle-switch.on .toggle-knob { transform: translateX(20px); }
+.master-toggle {
+  padding: 1.1rem 1.25rem; background: var(--bg2); border-radius: 14px;
+  border: 1px solid var(--border); margin-bottom: 1rem; cursor: pointer;
+  display: flex; align-items: center; gap: 1rem;
+}
+.master-toggle.enabled { border-color: rgba(249,115,22,.4); background: rgba(249,115,22,.05); }
+.master-icon { font-size: 1.5rem; }
+.master-label { flex: 1; }
+.master-title { font-size: 1rem; font-weight: 600; }
+.master-sub { font-size: .78rem; color: var(--text2); margin-top: 2px; }
+.share-link-box {
+  background: var(--bg3); border-radius: 12px; padding: .9rem 1rem;
+  border: 1px solid var(--border2); margin-bottom: 1rem;
+  font-family: 'JetBrains Mono', monospace; font-size: .78rem;
+  color: var(--accent); word-break: break-all;
+}
+.btn-copy-link {
+  width: 100%; padding: .8rem; border-radius: 12px; background: var(--accent);
+  color: #000; border: none; font-weight: 700; font-size: .9rem;
+  cursor: pointer; margin-bottom: 1rem; transition: opacity .15s;
+}
+.btn-copy-link:hover { opacity: .88; }
+.btn-sync {
+  width: 100%; padding: .75rem; border-radius: 12px;
+  background: rgba(59,130,246,.08); color: var(--blue);
+  border: 1px solid rgba(59,130,246,.2); font-weight: 600;
+  font-size: .88rem; cursor: pointer; transition: all .15s; margin-bottom: .5rem;
+}
+.btn-sync:hover { background: rgba(59,130,246,.15); }
+.sync-status {
+  font-size: .75rem; text-align: center; color: var(--text3); margin-bottom: 1rem;
+  font-family: 'JetBrains Mono', monospace;
+}
+.sync-status.synced { color: var(--green); }
+.sync-status.error { color: var(--red); }
+.share-section { font-size: .65rem; text-transform: uppercase; letter-spacing: .1em; color: var(--text3); margin: 1rem 0 .5rem; }
+
 </style>
 </head>
 <body>
@@ -982,6 +1043,7 @@ body::before {
 <div class="screen active" id="screen-home"></div>
 <div class="screen" id="screen-plan"></div>
 <div class="screen" id="screen-stats"></div>
+<div class="screen" id="screen-share"></div>
 
 <!-- NAV -->
 <nav class="nav">
@@ -1002,6 +1064,13 @@ body::before {
       <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
     </svg>
     Stats
+  </button>
+  <button class="nav-item" onclick="showScreen('share')" id="nav-share">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+    </svg>
+    Share
   </button>
 </nav>
 
@@ -1168,6 +1237,7 @@ function showScreen(name) {
   if (name === 'home') renderHome();
   if (name === 'plan') renderPlan();
   if (name === 'stats') renderStats();
+  if (name === 'share') renderShare();
 }
 
 // ── HOME SCREEN ───────────────────────────────────────────────────────────
@@ -2555,6 +2625,252 @@ function addSwipeToDismiss(sheetId, overlayId, closeFn) {
   });
 }
 
+
+// ── SUPABASE SYNC & SHARE ──────────────────────────────────────────────────
+const PROGRESS_URL = 'https://heartfelt-cendol-3d9363.netlify.app/progress';
+
+const DEFAULT_SHARE_SETTINGS = {
+  enabled: false,
+  progress_pct: true,
+  weekly_km: true,
+  streak: true,
+  race_days: true,
+  completed_count: true,
+  strava_runs: true,
+  plan_vs_actual: true,
+  hr_data: true,
+  pace_data: true,
+  checkins: false,
+  checkin_notes: false,
+  skipped_reasons: false,
+};
+
+function getShareSettings() {
+  return state.shareSettings || { ...DEFAULT_SHARE_SETTINGS };
+}
+
+function toggleShareSetting(key) {
+  if (!state.shareSettings) state.shareSettings = { ...DEFAULT_SHARE_SETTINGS };
+  state.shareSettings[key] = !state.shareSettings[key];
+  saveState();
+  renderShare();
+  // Auto-sync if enabled
+  if (state.shareSettings.enabled) {
+    syncToSupabase(true);
+  }
+}
+
+// ── STREAK CALCULATOR ──────────────────────────────────────────────────────
+function calcStreak() {
+  // Count consecutive weeks with at least one completed session
+  let streak = 0;
+  const today = TODAY_STR;
+  for (let i = PLAN.length - 1; i >= 0; i--) {
+    const w = PLAN[i];
+    if (w.end > today) continue; // future weeks
+    const hasCompleted = w.days.some(d =>
+      d.sessions.some(s => state.completed[s.id])
+    );
+    if (hasCompleted) streak++;
+    else break;
+  }
+  return streak;
+}
+
+// ── MATCH STRAVA RUNS TO PLAN ─────────────────────────────────────────────
+function matchStravaRuns() {
+  const runs = (state.stravaRuns || []).map(r => {
+    const runDate = r.start_date ? r.start_date.split('T')[0] : null;
+    let planMatch = null;
+    if (runDate) {
+      for (const w of PLAN) {
+        const day = w.days.find(d => d.date === runDate);
+        if (day) {
+          const s = day.sessions.find(s => s.sport === 'run');
+          if (s) planMatch = s.name;
+        }
+      }
+    }
+    return { ...r, plan_match: planMatch };
+  });
+  return runs;
+}
+
+// ── BUILD SYNC PAYLOAD ────────────────────────────────────────────────────
+function buildSyncPayload() {
+  const cw = currentWeek();
+  const settings = getShareSettings();
+  const runs = matchStravaRuns();
+
+  // Build weekly sessions for current week
+  const weeklySessions = cw ? cw.days.flatMap(d => d.sessions.map(s => ({
+    name: s.name, sport: s.sport,
+    status: state.completed[s.id] ? 'done' : state.skipped[s.id] ? 'skipped' : 'pending',
+  }))) : [];
+
+  // Avg HR from recent Strava runs
+  const hrRuns = runs.filter(r => r.average_heartrate);
+  const avgHr = hrRuns.length ? Math.round(hrRuns.reduce((s,r) => s+r.average_heartrate,0)/hrRuns.length) : null;
+
+  // Avg pace
+  const paceRuns = runs.filter(r => r.average_speed && r.average_speed > 0);
+  const avgPace = paceRuns.length ? Math.round(1000 / (paceRuns.reduce((s,r) => s+r.average_speed,0)/paceRuns.length)) : null;
+
+  return {
+    progress_pct: overallPct(),
+    weekly_km: weekKm(),
+    streak: calcStreak(),
+    race_days: daysToRace(),
+    completed_count: completedCount(),
+    recent_runs: runs.slice(0,5),
+    weekly_sessions: weeklySessions,
+    avg_hr: avgHr,
+    avg_pace: avgPace,
+    checkins: (state.checkins || []).slice(-10).map(c => ({
+      date: c.date, dist: c.dist, time: c.time, hr: c.hr, rpe: c.rpe,
+      // Only include notes if toggled on
+      ...(settings.checkin_notes ? { notes: c.notes } : {}),
+    })),
+    share_settings: settings,
+    completed: state.completed,
+    skipped: settings.skipped_reasons ? state.skipped : 
+      Object.fromEntries(Object.entries(state.skipped||{}).map(([k,v]) => [k,{date:v.date}])),
+    moved: state.moved,
+    action_log: (state.actionLog||[]).slice(0,20),
+  };
+}
+
+// ── SYNC TO SUPABASE ──────────────────────────────────────────────────────
+let lastSyncTime = null;
+let syncTimer = null;
+
+async function syncToSupabase(silent = false) {
+  const syncStatus = document.getElementById('syncStatus');
+  if (syncStatus && !silent) {
+    syncStatus.textContent = 'Syncing...';
+    syncStatus.className = 'sync-status';
+  }
+
+  try {
+    const payload = buildSyncPayload();
+    const res = await fetch('/.netlify/functions/supabase-sync/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      lastSyncTime = new Date().toLocaleTimeString('en-GB');
+      state.lastSync = lastSyncTime;
+      saveState();
+      if (syncStatus) {
+        syncStatus.textContent = '✓ Synced at ' + lastSyncTime;
+        syncStatus.className = 'sync-status synced';
+      }
+      if (!silent) {
+        haptic('success');
+        showToast('Progress synced!', '☁️');
+      }
+    } else {
+      if (syncStatus) {
+        syncStatus.textContent = '✗ Sync failed — check connection';
+        syncStatus.className = 'sync-status error';
+      }
+    }
+  } catch(err) {
+    if (syncStatus) {
+      syncStatus.textContent = '✗ Sync failed: ' + err.message;
+      syncStatus.className = 'sync-status error';
+    }
+  }
+}
+
+// Auto-sync every 5 min if share is enabled
+function startAutoSync() {
+  clearInterval(syncTimer);
+  if (getShareSettings().enabled) {
+    syncTimer = setInterval(() => syncToSupabase(true), 5 * 60 * 1000);
+  }
+}
+
+// ── RENDER SHARE SCREEN ───────────────────────────────────────────────────
+function renderShare() {
+  const settings = getShareSettings();
+  const isEnabled = settings.enabled;
+
+  const TOGGLES = [
+    { key:'progress_pct',   label:'Overall progress %',      desc:'Progress ring and completion percentage' },
+    { key:'weekly_km',      label:'Weekly km',               desc:'Distance completed this week' },
+    { key:'streak',         label:'Week streak',             desc:'Consecutive weeks with activity' },
+    { key:'strava_runs',    label:'Recent Strava runs',      desc:'Last 5 runs with distance, time, HR' },
+    { key:'hr_data',        label:'Heart rate data',         desc:'Average HR from runs' },
+    { key:'pace_data',      label:'Pace data',               desc:'Average pace from runs' },
+    { key:'plan_vs_actual', label:'Plan vs actual',          desc:'This week's sessions with status' },
+    { key:'checkins',       label:'Check-in stats',          desc:'Weekly check-in numbers (no personal notes)' },
+    { key:'checkin_notes',  label:'Check-in notes',          desc:'Personal notes from check-ins' },
+    { key:'skipped_reasons',label:'Skip reasons',            desc:'Why sessions were skipped' },
+  ];
+
+  const togglesHTML = TOGGLES.map(t => `
+    <div class="share-toggle-row" onclick="toggleShareSetting('${t.key}')">
+      <div class="share-toggle-info">
+        <div class="share-toggle-label">${t.label}</div>
+        <div class="share-toggle-desc">${t.desc}</div>
+      </div>
+      <div class="toggle-switch ${settings[t.key]?'on':''}">
+        <div class="toggle-knob"></div>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('screen-share').innerHTML = `
+    <div class="screen-title">Share</div>
+
+    <div class="master-toggle ${isEnabled?'enabled':''}" onclick="toggleShareSetting('enabled')">
+      <div class="master-icon">${isEnabled?'🌍':'🔒'}</div>
+      <div class="master-label">
+        <div class="master-title">${isEnabled?'Progress page is PUBLIC':'Progress page is PRIVATE'}</div>
+        <div class="master-sub">${isEnabled?'Anyone with the link can see your progress':'Only you can see your progress'}</div>
+      </div>
+      <div class="toggle-switch ${isEnabled?'on':''}">
+        <div class="toggle-knob"></div>
+      </div>
+    </div>
+
+    ${isEnabled ? `
+      <div class="share-link-box">${PROGRESS_URL}</div>
+      <button class="btn-copy-link" onclick="copyProgressLink()">Copy link to share</button>
+    ` : ''}
+
+    <button class="btn-sync" onclick="syncToSupabase()">☁️ Sync progress now</button>
+    <div class="sync-status ${state.lastSync?'synced':''}" id="syncStatus">
+      ${state.lastSync ? '✓ Last synced: ' + state.lastSync : 'Not yet synced'}
+    </div>
+
+    ${isEnabled ? `
+      <div class="share-section">What you share</div>
+      ${togglesHTML}
+      <div style="font-size:.75rem;color:var(--text3);padding:.75rem;background:var(--bg3);border-radius:10px;margin-top:.75rem;line-height:1.6">
+        🔒 Your personal notes, knee feedback, and specific skip reasons are never shared unless you explicitly turn them on above.
+      </div>
+    ` : `
+      <div style="font-size:.85rem;color:var(--text2);text-align:center;padding:1.5rem;background:var(--bg2);border-radius:12px;border:1px solid var(--border);line-height:1.7">
+        Enable the public page above to get a shareable link for family, friends, and your coach.<br/><br/>
+        You control exactly what they can see.
+      </div>
+    `}
+  `;
+}
+
+function copyProgressLink() {
+  navigator.clipboard.writeText(PROGRESS_URL).then(() => {
+    haptic('success');
+    showToast('Link copied!', '🔗');
+  }).catch(() => {
+    showToast(PROGRESS_URL);
+  });
+}
+
 loadState();
 
 // Handle Strava OAuth callback on page load
@@ -2571,6 +2887,8 @@ setTimeout(() => {
   document.getElementById('loadingScreen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   renderHome();
+  // Start auto-sync if share is enabled
+  startAutoSync();
   // Init swipe to dismiss on both modals
   addSwipeToDismiss('modal-sheet-inner', 'modal', () => {
     document.getElementById('modal').classList.remove('open');
